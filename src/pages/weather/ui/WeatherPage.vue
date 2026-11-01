@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import type { Position } from 'tikitaki';
-import { computed, inject, onBeforeUnmount, onMounted, watch } from 'vue';
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
 import {
   CurrentWeatherCard,
   readWeatherSnapshot,
@@ -48,16 +48,23 @@ function saveSnapshot(forecastDays = forecast.days): void {
 }
 
 /**
- * retry. Reload current weather and restart the background forecast
+ * reloadWeather. Refresh the current observation and restart the forecast in the background.
+ *
+ * @param signal The optional boundary action cancellation signal.
+ * @returns A promise that settles once the current card is updated.
  */
-function retry(): void {
+async function reloadWeather(signal?: AbortSignal): Promise<void> {
+  if (!services || weather.loading || signal?.aborted) return;
   const token = ++loadRevision;
-  forecast.cancel();
-  if (!services) return;
-  void weather.load(services).then(() => {
-    if (token !== loadRevision || !forecastServices) return;
-    const current = weather.state;
-    if (current.status !== 'ready' || current.cachedAt !== null) return;
+  if (weather.state.status !== 'ready') forecast.cancel();
+  const loaded = await weather.load(services, {
+    preserveCurrent: weather.state.status === 'ready',
+    ...(signal ? { signal } : {}),
+  });
+  if (!loaded || token !== loadRevision || signal?.aborted) return;
+  const current = weather.state;
+  if (current.status !== 'ready' || current.cachedAt !== null) return;
+  if (forecastServices)
     forecast.start(
       {
         location: current.location,
@@ -67,8 +74,15 @@ function retry(): void {
       },
       forecastServices,
     );
-    saveSnapshot([]);
-  });
+  saveSnapshot([]);
+  await nextTick();
+}
+
+/**
+ * retry. Reload current weather from a button or a restored connection.
+ */
+function retry(): void {
+  void reloadWeather();
 }
 
 /**
@@ -142,6 +156,8 @@ watch(
       :key="props.navigationReset"
       :grid="grid"
       :locale="locale"
+      :refresh="reloadWeather"
+      :refresh-enabled="state.status === 'ready' && !weather.loading"
       @position-change="onPositionChange"
     >
       <template #default="{ cell }">

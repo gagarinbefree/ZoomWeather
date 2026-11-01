@@ -4,18 +4,26 @@ import type { Position } from 'tikitaki';
 import type { WeatherCell, WeatherGrid } from '@/entities/weather';
 import { messages } from '@/shared/locales';
 import { LoadingIndicator } from '@/shared/ui/loading-indicator';
-import { useWeatherSwipe } from '@/widgets/weather-grid/model/use-weather-swipe';
+import {
+  useWeatherSwipe,
+  weatherRefreshOptions,
+} from '@/widgets/weather-grid/model/use-weather-swipe';
 
 const props = withDefaults(
-  defineProps<{ readonly grid: WeatherGrid; readonly locale?: 'ru' | 'en' }>(),
-  { locale: 'ru' },
+  defineProps<{
+    readonly grid: WeatherGrid;
+    readonly locale?: 'ru' | 'en';
+    readonly refresh?: ((signal: AbortSignal) => Promise<void>) | null;
+    readonly refreshEnabled?: boolean;
+  }>(),
+  { locale: 'ru', refreshEnabled: true, refresh: null },
 );
 const emit = defineEmits<{ positionChange: [position: Position]; error: [error: Error] }>();
 defineSlots<{ default?: Slot<{ readonly cell: WeatherCell }> }>();
 const container = shallowRef<HTMLElement | null>(null);
 const instructionId = useId();
 const text = computed(() => messages[props.locale]);
-const { cells, position, failed, onKeydown } = useWeatherSwipe(
+const { cells, position, failed, refreshState, onKeydown } = useWeatherSwipe(
   container,
   () => props.grid,
   (next) => {
@@ -24,6 +32,19 @@ const { cells, position, failed, onKeydown } = useWeatherSwipe(
   (error) => {
     emit('error', error);
   },
+  (signal) => props.refresh?.(signal) ?? Promise.resolve(),
+  () => props.refresh !== null && props.refreshEnabled,
+);
+const refreshing = computed(() => refreshState.value?.phase === 'loading');
+const refreshVisible = computed(
+  () => refreshState.value !== null && refreshState.value.phase !== 'idle',
+);
+const refreshLabel = computed(() =>
+  refreshState.value?.phase === 'armed'
+    ? text.value.releaseToRefresh
+    : refreshState.value?.phase === 'pulling'
+      ? text.value.pullToRefresh
+      : text.value.refreshingWeather,
 );
 const activeId = computed(() => props.grid[position.value.row]?.[position.value.col]?.id);
 </script>
@@ -40,12 +61,19 @@ const activeId = computed(() => props.grid[position.value.row]?.[position.value.
     tabindex="0"
     :aria-label="text.forecastNavigation"
     :aria-describedby="instructionId"
+    :style="{ '--weather-refresh-height': `${weatherRefreshOptions.holdOffset}px` }"
+    :aria-busy="refreshing"
+    :data-refresh-phase="refreshState?.phase ?? 'idle'"
     :data-active-cell="activeId"
     :data-grid-rows="grid.length"
     :data-row="position.row"
     :data-column="position.col"
     @keydown="onKeydown"
-  />
+  >
+    <div v-show="refreshVisible" class="weather-refresh" data-refresh-indicator>
+      <LoadingIndicator v-if="refreshVisible" :label="refreshLabel" />
+    </div>
+  </section>
   <p :id="instructionId" class="visually-hidden">{{ text.swipeInstructions }}</p>
   <Teleport v-for="cell in cells" :key="cell.key" :to="cell.host">
     <section class="weather-cell" :data-cell-id="cell.item.id">

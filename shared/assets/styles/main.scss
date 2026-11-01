@@ -1,5 +1,6 @@
 // Global styles shared by the browser PWA and Android entry points.
 @use 'bootstrap/scss/root';
+@use 'weather-refresh';
 @use 'bootstrap/scss/content/reboot';
 @use 'bootstrap/scss/spinner';
 @use 'bootstrap/scss/buttons/button';
@@ -37,6 +38,7 @@
 // Bootstrap root declarations are unlayered and require an unlayered override.
 :root {
   scrollbar-gutter: auto;
+  overscroll-behavior-y: contain;
   color-scheme: light;
 }
 

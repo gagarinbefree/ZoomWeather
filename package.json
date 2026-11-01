@@ -33,11 +33,11 @@
     "@capacitor/geolocation": "8.2.4",
     "@photostructure/tz-lookup": "11.6.1",
     "@sentry/vue": "11.10.0",
-    "@tikitaki_gagarinbefree/vue": "0.1.14",
+    "@tikitaki_gagarinbefree/vue": "0.1.15",
     "@vue/devtools-api": "8.2.1",
     "bootstrap": "6.0.0-alpha.1",
     "pinia": "4.1.0",
-    "tikitaki": "0.1.14",
+    "tikitaki": "0.1.15",
     "vue": "3.5.44"
   },
   "devDependencies": {

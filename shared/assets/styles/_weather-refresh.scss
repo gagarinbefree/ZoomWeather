@@ -1,0 +1,15 @@
+// The same refresh area is used by the website PWA and Android application.
+@layer custom {
+  .weather-refresh {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: var(--weather-refresh-height);
+    display: grid;
+    place-items: center;
+    padding-block-start: env(safe-area-inset-top);
+    pointer-events: none;
+    color: var(--weather-accent);
+    background: var(--weather-surface);
+  }
+}

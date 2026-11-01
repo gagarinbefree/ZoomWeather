@@ -2,6 +2,9 @@ export const messages = {
   ru: {
     appName: 'ZoomWeather',
     loadingWeather: 'Загружаем погоду...',
+    pullToRefresh: 'Потяните вниз для обновления',
+    releaseToRefresh: 'Отпустите для обновления',
+    refreshingWeather: 'Обновляем погоду...',
     weather: 'Погода',
     currentWeather: 'Текущая погода',
     dailyForecast: 'Прогноз на день',
@@ -65,7 +68,7 @@ export const messages = {
     },
     forecastNavigation: 'Навигация по прогнозу',
     swipeInstructions:
-      'Свайп влево или вправо переключает часы. Свайп вверх или вниз переключает дни. Для клавиатуры используйте стрелки.',
+      'Свайп влево или вправо переключает часы. Свайп вверх или вниз переключает дни. На текущей погоде потяните вниз для обновления. Для клавиатуры используйте стрелки.',
     navigationFailed: 'Не удалось открыть прогноз',
     invalidTimestamp: 'Некорректное время прогноза',
     invalidDate: 'Некорректная дата прогноза',
@@ -78,6 +81,9 @@ export const messages = {
   en: {
     appName: 'ZoomWeather',
     loadingWeather: 'Loading weather...',
+    pullToRefresh: 'Pull down to refresh',
+    releaseToRefresh: 'Release to refresh',
+    refreshingWeather: 'Refreshing weather...',
     weather: 'Weather',
     currentWeather: 'Current weather',
     dailyForecast: 'Daily forecast',
@@ -140,7 +146,7 @@ export const messages = {
     },
     forecastNavigation: 'Forecast navigation',
     swipeInstructions:
-      'Swipe left or right to change hours. Swipe up or down to change days. Use the arrow keys for keyboard navigation.',
+      'Swipe left or right to change hours. Swipe up or down to change days. Pull down on current weather to refresh. Use the arrow keys for keyboard navigation.',
     navigationFailed: 'Unable to open the forecast',
     invalidTimestamp: 'Invalid forecast timestamp',
     invalidDate: 'Invalid forecast date',

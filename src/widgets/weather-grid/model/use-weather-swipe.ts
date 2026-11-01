@@ -1,7 +1,12 @@
 import { reportFailure } from '@/shared/diagnostics';
 import { onBeforeUnmount, onMounted, shallowRef, watch, type ShallowRef } from 'vue';
 import type { Direction, Position } from 'tikitaki';
-import { createSwipeEngine, type SwipeEngine } from 'tikitaki/dom';
+import {
+  createSwipeEngine,
+  type SwipeEngine,
+  type EdgeActionState,
+  type EdgeActionContext,
+} from 'tikitaki/dom';
 import { createVueCellAdapter, type VueCellBridge } from '@tikitaki_gagarinbefree/vue';
 import type { WeatherCell, WeatherGrid } from '@/entities/weather';
 import { messages } from '@/shared/locales';
@@ -10,8 +15,12 @@ interface WeatherSwipeView {
   readonly cells: VueCellBridge<WeatherCell>['cells'];
   readonly position: Readonly<ShallowRef<Position>>;
   readonly failed: Readonly<ShallowRef<boolean>>;
+  readonly refreshState: Readonly<ShallowRef<EdgeActionState | null>>;
   readonly onKeydown: (event: KeyboardEvent) => void;
 }
+
+/** Visible pull threshold and loading area height in CSS pixels. */
+export const weatherRefreshOptions = Object.freeze({ threshold: 40, holdOffset: 80 });
 
 const keyboardDirections: Readonly<Record<string, Direction>> = {
   ArrowRight: 'left',
@@ -42,6 +51,8 @@ function findCellPosition(grid: WeatherGrid, id: string | null): Position | unde
  * @param readGrid The current immutable forecast snapshot.
  * @param onPositionChange The callback for a committed selection.
  * @param onError The callback for a controller failure.
+ * @param refresh The optional cancellable current weather refresh.
+ * @param canRefresh Whether the page can start a new weather request.
  * @returns Reactive cell hosts and navigation state owned by the current Vue component.
  */
 export function useWeatherSwipe(
@@ -49,11 +60,14 @@ export function useWeatherSwipe(
   readGrid: () => WeatherGrid,
   onPositionChange: (position: Position) => void,
   onError: (error: Error) => void,
+  refresh?: (signal: AbortSignal) => Promise<void>,
+  canRefresh: () => boolean = () => true,
 ): WeatherSwipeView {
   const bridge = createVueCellAdapter<WeatherCell>();
   const controller = shallowRef<SwipeEngine<WeatherCell> | null>(null);
   const position = shallowRef<Position>({ row: 0, col: 0 });
   const failed = shallowRef(false);
+  const refreshState = shallowRef<EdgeActionState | null>(null);
   let selectedId: string | null = null;
   let revision = 0;
   let updating = false;
@@ -79,6 +93,20 @@ export function useWeatherSwipe(
     failed.value = true;
     reportFailure(error, 'navigation');
     onError(error instanceof Error ? error : new Error(messages.en.navigationFailed));
+  }
+
+  /**
+   * refreshWeather. Refresh silently while retaining a usable current card.
+   *
+   * @param signal The cancellation signal owned by the boundary action.
+   * @returns A promise that settles when the current weather request finishes.
+   */
+  async function refreshWeather(signal: AbortSignal): Promise<void> {
+    try {
+      await refresh?.(signal);
+    } catch (error) {
+      if (!signal.aborted) reportFailure(error, 'current', true);
+    }
   }
 
   /**
@@ -150,6 +178,23 @@ export function useWeatherSwipe(
         adapter: bridge.adapter,
         onPositionChange: publishPosition,
         onError: reportError,
+        ...(refresh
+          ? {
+              edgeAction: {
+                direction: 'down' as const,
+                ...weatherRefreshOptions,
+                enabled: (selected: Position): boolean =>
+                  selected.row === 0 &&
+                  selected.col === 0 &&
+                  readGrid()[0]?.[0]?.kind === 'current' &&
+                  canRefresh(),
+                onTrigger: ({ signal }: EdgeActionContext): Promise<void> => refreshWeather(signal),
+                onStateChange: (state: EdgeActionState): void => {
+                  refreshState.value = state;
+                },
+              },
+            }
+          : {}),
         ...(reduceMotion ? { gesture: { animationDuration: 0 } } : {}),
       });
       publishPosition(controller.value.getPosition());
@@ -163,5 +208,5 @@ export function useWeatherSwipe(
     disposed = true;
     stop();
   });
-  return { cells: bridge.cells, position, failed, onKeydown };
+  return { cells: bridge.cells, position, failed, refreshState, onKeydown };
 }

@@ -237,3 +237,151 @@ it('restores a saved forecast even if its old place names are incomplete', async
   });
   expect(store.state).toMatchObject({ status: 'ready', cachedAt: 100 });
 });
+
+describe('pull refresh', () => {
+  it('keeps the current card and grid while locating and fetching fresh weather', async () => {
+    const store = useCurrentWeatherStore();
+    await store.load(services());
+    const previous = store.state;
+    const grid = useWeatherGridStore().grid;
+    let release: ((value: LocationQuery) => void) | undefined;
+    const pending = store.load(
+      {
+        ...services(),
+        locate: () =>
+          new Promise<LocationQuery>((resolve) => {
+            release = resolve;
+          }),
+      },
+      { preserveCurrent: true },
+    );
+    expect(store.loading).toBe(true);
+    expect(store.state).toBe(previous);
+    expect(useWeatherGridStore().grid).toBe(grid);
+    release?.({
+      source: 'device',
+      latitude: 58,
+      longitude: 56.25,
+      city: 'Perm',
+      countryCode: 'RU',
+    });
+    await expect(pending).resolves.toBe(true);
+    expect(store.loading).toBe(false);
+  });
+
+  it('keeps the previous reading silently when refreshing fails', async () => {
+    const store = useCurrentWeatherStore();
+    await store.load(services());
+    const previous = store.state;
+    const grid = useWeatherGridStore().grid;
+    await expect(
+      store.load(
+        {
+          ...services(),
+          current: () => Promise.reject(new ApiError('timeout')),
+        },
+        { preserveCurrent: true },
+      ),
+    ).resolves.toBe(false);
+    expect(store.state).toBe(previous);
+    expect(useWeatherGridStore().grid).toBe(grid);
+    await store.load(services(), { preserveCurrent: true });
+  });
+
+  it('aborts the request with the gesture and ignores a late location response', async () => {
+    const store = useCurrentWeatherStore();
+    await store.load(services());
+    const previous = store.state;
+    const controller = new AbortController();
+    let release: ((value: LocationQuery) => void) | undefined;
+    let requestSignal: AbortSignal | undefined;
+    const current = vi.fn(services().current);
+    const pending = store.load(
+      {
+        ...services(),
+        current,
+        locate: (signal) => {
+          requestSignal = signal;
+          return new Promise<LocationQuery>((resolve) => {
+            release = resolve;
+          });
+        },
+      },
+      { preserveCurrent: true, signal: controller.signal },
+    );
+    controller.abort();
+    expect(requestSignal?.aborted).toBe(true);
+    expect(store.loading).toBe(false);
+    release?.({
+      source: 'device',
+      latitude: 58,
+      longitude: 56.25,
+      city: 'Perm',
+      countryCode: 'RU',
+    });
+    await expect(pending).resolves.toBe(false);
+    expect(current).not.toHaveBeenCalled();
+    expect(store.state).toBe(previous);
+  });
+});
+
+it('ignores an already cancelled refresh without replacing the current card', async () => {
+  const store = useCurrentWeatherStore();
+  await store.load(services());
+  const previous = store.state;
+  const controller = new AbortController();
+  controller.abort();
+  const dependencies = services();
+  await expect(
+    store.load(dependencies, { preserveCurrent: true, signal: controller.signal }),
+  ).resolves.toBe(false);
+  expect(dependencies.locate).not.toHaveBeenCalled();
+  expect(store.state).toBe(previous);
+});
+
+it('does not let an old gesture cancel a newer request', async () => {
+  const store = useCurrentWeatherStore();
+  await store.load(services());
+  const oldGesture = new AbortController();
+  let releaseOld: ((value: LocationQuery) => void) | undefined;
+  let releaseNew: ((value: LocationQuery) => void) | undefined;
+  const oldRequest = store.load(
+    {
+      ...services(),
+      locate: () =>
+        new Promise<LocationQuery>((resolve) => {
+          releaseOld = resolve;
+        }),
+    },
+    { preserveCurrent: true, signal: oldGesture.signal },
+  );
+  const next = store.load(
+    {
+      ...services(),
+      locate: () =>
+        new Promise<LocationQuery>((resolve) => {
+          releaseNew = resolve;
+        }),
+    },
+    { preserveCurrent: true },
+  );
+  oldGesture.abort();
+  expect(store.loading).toBe(true);
+  releaseNew?.({
+    source: 'device',
+    latitude: 58,
+    longitude: 56.25,
+    city: 'New city',
+    countryCode: 'RU',
+  });
+  await expect(next).resolves.toBe(true);
+  releaseOld?.({
+    source: 'device',
+    latitude: 58,
+    longitude: 56.25,
+    city: 'Old city',
+    countryCode: 'RU',
+  });
+  await expect(oldRequest).resolves.toBe(false);
+  expect(store.state).toMatchObject({ status: 'ready', weather: { city: 'New city' } });
+});

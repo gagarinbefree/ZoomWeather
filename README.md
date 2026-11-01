@@ -23,6 +23,8 @@ Each card fills the screen. Current weather appears first, followed by the forec
 
 **Swipe up or down** to move between days.
 
+**Pull down on current weather** to refresh it. A spinner appears while loading. If the request fails, your last current weather stays on screen.
+
 **See a loading indicator** while a card's forecast is on its way; you can keep browsing.
 
 Cards show the temperature, conditions, and helpful details such as humidity, wind, and chance of rain. The number of forecast days depends on the available weather data.
@@ -54,6 +56,8 @@ The interface is available in English and Russian. It is comfortable to use on a
 **Свайп влево или вправо** показывает погоду в другое время выбранного дня.
 
 **Свайп вверх или вниз** открывает прогноз на следующий или предыдущий день.
+
+**Потяните текущую погоду вниз**, чтобы обновить её. Пока идёт загрузка, появится спиннер. Если запрос не удался, на экране останется последняя текущая погода.
 
 **Индикатор загрузки** появляется, пока прогноз для карточки готовится. Можно продолжать листать.
 
