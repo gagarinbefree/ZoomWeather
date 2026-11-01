@@ -27,7 +27,7 @@ Each card fills the screen. Current weather appears first, followed by the forec
 
 **See a loading indicator** while a card's forecast is on its way; you can keep browsing.
 
-Cards show the temperature, conditions, and helpful details such as humidity, wind, and chance of rain. The number of forecast days depends on the available weather data.
+Cards show the temperature, conditions, and helpful details such as humidity, wind, chance of rain, and other available measurements. The number of forecast days depends on the available weather data.
 
 Maps are provided by [Windy](https://www.windy.com/) and need an internet connection. Their forecast can differ from the weather cards.
 
@@ -44,6 +44,10 @@ On Android, you can also [download the latest APK](https://github.com/gagarinbef
 The interface is available in English and Russian. It is comfortable to use on a phone; on a computer, the card keeps its portrait layout, and you can browse with the arrow keys.
 
 [Check the weather](https://gagarinbefree.github.io/ZoomWeather/)
+
+### Built with TikiTaki
+
+ZoomWeather is built using [TikiTaki](https://github.com/gagarinbefree/TikiTaki), the library behind its swipe navigation.
 
 ## Русский
 
@@ -73,7 +77,7 @@ ZoomWeather попросит разрешение определить ваше 
 
 ### Установка на устройство
 
-Откройте [ZoomWeather](https://gagarinbefree.github.io/ZoomWeather/) в браузере и выберите в его меню **Установить приложение** или **Добавить на главный экран**. После этого погода открывается как обычное приложение. Последний успешно полученный прогноз доступен и без сети; рядом указано время сохранения. Когда интернет появится, нажмите **Повторить**, чтобы обновить данные.
+Откройте [ZoomWeather](https://gagarinbefree.github.io/ZoomWeather/) в браузере и выберите в его меню **Установить приложение** или **Добавить на главный экран**. После этого погода открывается как обычное приложение без загрузки из магазина. Последний успешно полученный прогноз доступен и без сети; рядом указано время сохранения. Когда интернет появится, нажмите **Повторить**, чтобы обновить данные.
 
 На Android также можно [скачать APK последней версии](https://github.com/gagarinbefree/ZoomWeather/releases/latest/download/ZoomWeather-Android.apk) и установить его на телефон.
 
@@ -81,8 +85,6 @@ ZoomWeather попросит разрешение определить ваше 
 
 [Смотреть погоду](https://gagarinbefree.github.io/ZoomWeather/)
 
-## TikiTaki
-
-ZoomWeather is built using [TikiTaki](https://github.com/gagarinbefree/TikiTaki), the library behind its swipe navigation.
+### Сделано с TikiTaki
 
 ZoomWeather разработано с использованием [TikiTaki](https://github.com/gagarinbefree/TikiTaki), библиотеки навигации свайпами.
