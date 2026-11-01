@@ -1,5 +1,18 @@
 export const messages = {
   ru: {
+    mapLayers: { temp: 'Карта температуры', wind: 'Карта ветра', pressure: 'Карта давления' },
+    mapLoading: 'Загружаем карту...',
+    mapFailed: 'Не удалось загрузить карту',
+    mapOffline: 'Для карты нужен интернет',
+    mapLocationPending: 'Карта появится после определения местоположения',
+    mapLocationInvalid: 'Некорректные координаты карты',
+    mapSwipeHint: 'Листайте карты свайпом по заголовку',
+    mapGestureHint: 'Двигайте и масштабируйте карту пальцами',
+    mapNavigation: 'Навигация по картам',
+    mapPrevious: 'Назад',
+    mapNext: 'Далее',
+    mapOpen: 'Открыть в Windy',
+
     appName: 'ZoomWeather',
     loadingWeather: 'Загружаем погоду...',
     pullToRefresh: 'Потяните вниз для обновления',
@@ -68,7 +81,7 @@ export const messages = {
     },
     forecastNavigation: 'Навигация по прогнозу',
     swipeInstructions:
-      'Свайп влево или вправо переключает часы. Свайп вверх или вниз переключает дни. На текущей погоде потяните вниз для обновления. Для клавиатуры используйте стрелки.',
+      'Свайп влево открывает часы, вправо от текущей погоды открывает карты. На карте листайте по заголовку. Свайп вверх или вниз открывает погодную карточку соседнего дня. Потяните текущую погоду вниз для обновления. Для клавиатуры используйте стрелки.',
     navigationFailed: 'Не удалось открыть прогноз',
     invalidTimestamp: 'Некорректное время прогноза',
     invalidDate: 'Некорректная дата прогноза',
@@ -79,6 +92,19 @@ export const messages = {
     incompleteForecastCalendar: 'Не удалось построить дни прогноза',
   },
   en: {
+    mapLayers: { temp: 'Temperature map', wind: 'Wind map', pressure: 'Pressure map' },
+    mapLoading: 'Loading map...',
+    mapFailed: 'Unable to load the map',
+    mapOffline: 'Maps need an internet connection',
+    mapLocationPending: 'The map will appear after your location is found',
+    mapLocationInvalid: 'Invalid map coordinates',
+    mapSwipeHint: 'Swipe the header to switch maps',
+    mapGestureHint: 'Drag and pinch to explore the map',
+    mapNavigation: 'Map navigation',
+    mapPrevious: 'Back',
+    mapNext: 'Next',
+    mapOpen: 'Open in Windy',
+
     appName: 'ZoomWeather',
     loadingWeather: 'Loading weather...',
     pullToRefresh: 'Pull down to refresh',
@@ -146,7 +172,7 @@ export const messages = {
     },
     forecastNavigation: 'Forecast navigation',
     swipeInstructions:
-      'Swipe left or right to change hours. Swipe up or down to change days. Pull down on current weather to refresh. Use the arrow keys for keyboard navigation.',
+      'Swipe left for hours and right from current weather for maps. Swipe map headers to switch cards. Swipe up or down for the daily weather card. Pull down on current weather to refresh. Use the arrow keys for keyboard navigation.',
     navigationFailed: 'Unable to open the forecast',
     invalidTimestamp: 'Invalid forecast timestamp',
     invalidDate: 'Invalid forecast date',

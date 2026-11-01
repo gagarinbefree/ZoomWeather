@@ -72,7 +72,7 @@ for (const direction of ['left', 'right', 'up', 'down'] as const satisfies reado
     await swipe(page, direction);
     await expect(dialog).toHaveCount(0);
     await expect(viewport).toHaveAttribute('data-row', '0');
-    await expect(viewport).toHaveAttribute('data-column', '0');
+    await expect(viewport).toHaveAttribute('data-column', '3');
     await expect(viewport).toBeFocused();
     await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
   });
@@ -103,7 +103,7 @@ test('fits a small phone and traps keyboard focus until Cancel returns to curren
   expect(await page.evaluate(() => document.activeElement?.closest('dialog') !== null)).toBe(true);
   await cancel.click();
   await expect(dialog).toHaveCount(0);
-  await expect(page.locator('.weather-viewport')).toHaveAttribute('data-column', '0');
+  await expect(page.locator('.weather-viewport')).toHaveAttribute('data-column', '3');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );

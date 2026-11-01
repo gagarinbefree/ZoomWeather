@@ -89,7 +89,7 @@ test('keeps current daily and hourly cards fully visible at the Android viewport
   await expect(daily).toContainText('07:47');
   await expectCardInsideCell(daily);
   await viewport.press('ArrowRight');
-  await expect(viewport).toHaveAttribute('data-column', '1');
+  await expect(viewport).toHaveAttribute('data-column', '4');
   await expectCardInsideCell(page.getByRole('article', { name: 'Почасовой прогноз' }));
 });
 
@@ -205,16 +205,16 @@ for (const scenario of [
     await expect(viewport).toHaveAttribute('data-grid-rows', '3');
     await viewport.focus();
     for (const [key, row, column] of [
-      ['ArrowRight', '0', '1'],
-      ['ArrowRight', '0', '2'],
-      ['ArrowDown', '1', '0'],
-      ['ArrowRight', '1', '1'],
+      ['ArrowRight', '0', '4'],
+      ['ArrowRight', '0', '5'],
+      ['ArrowDown', '1', '3'],
+      ['ArrowRight', '1', '4'],
     ] as const) {
       await viewport.press(key);
       await expect(viewport).toHaveAttribute('data-row', row);
       await expect(viewport).toHaveAttribute('data-column', column);
       await expect(current.locator('dd')).toHaveCount(6);
-      const daily = column === '0';
+      const daily = column === '3';
       await expect(current.locator('dd').nth(daily ? 1 : 2)).toContainText(
         scenario.english ? (daily ? '11.2 mph' : '6.8 mph') : daily ? '5 м/с' : '3,1 м/с',
       );

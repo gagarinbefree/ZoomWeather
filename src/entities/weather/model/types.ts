@@ -33,5 +33,12 @@ export interface HourlyWeatherCell extends WeatherCellIdentity {
   readonly timestamp: number;
 }
 
-export type WeatherCell = CurrentWeatherCell | DailyWeatherCell | HourlyWeatherCell;
+export type WeatherMapLayer = 'temp' | 'wind' | 'pressure';
+export interface WeatherMapCell extends WeatherCellIdentity {
+  readonly kind: 'map';
+  readonly layer: WeatherMapLayer;
+  readonly timestamp?: never;
+}
+export type WeatherCell =
+  CurrentWeatherCell | DailyWeatherCell | HourlyWeatherCell | WeatherMapCell;
 export type WeatherGrid = Grid<WeatherCell>;

@@ -1,0 +1,76 @@
+@layer custom {
+  .weather-map {
+    --weather-map-gap: var(--spacer-2);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    inline-size: 100%;
+    block-size: 100%;
+    min-block-size: 0;
+    overflow: hidden;
+    color: var(--weather-ink);
+    background: var(--card-background);
+    border-radius: var(--radius-5);
+  }
+  .weather-map__header {
+    display: grid;
+    gap: var(--weather-map-gap);
+    padding: var(--spacer-3);
+    background: linear-gradient(135deg, var(--card-header-start), var(--card-header-end));
+  }
+  .weather-map__header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+  .weather-map__header p {
+    margin: 0;
+  }
+  .weather-map__header nav {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--weather-map-gap);
+  }
+  .weather-map .btn {
+    --btn-bg: var(--weather-surface);
+    --btn-color: var(--weather-ink);
+    --btn-border-color: var(--weather-muted);
+  }
+  .weather-map__hint,
+  .weather-map__footer {
+    font-size: 0.75rem;
+    color: var(--weather-muted);
+  }
+  .weather-map__footer {
+    padding: var(--spacer-3);
+    text-align: center;
+  }
+  .weather-map__body {
+    position: relative;
+    min-block-size: 0;
+  }
+  .weather-map iframe {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    border: 0;
+    touch-action: auto;
+  }
+  .weather-map__loading,
+  .weather-map__notice {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--spacer-3);
+    padding: var(--spacer-3);
+    text-align: center;
+    background: var(--card-background);
+  }
+  .weather-map__loading {
+    pointer-events: none;
+  }
+  .weather-map__notice p {
+    margin: 0;
+  }
+}

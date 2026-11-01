@@ -53,7 +53,7 @@ async function pullDown(page: Page, distance = 200): Promise<void> {
 }
 
 for (const installed of [false, true]) {
-  test(`refreshes A1 while keeping the card visible in ${installed ? 'installed PWA' : 'website'}`, async ({
+  test(`refreshes A4 while keeping the card visible in ${installed ? 'installed PWA' : 'website'}`, async ({
     page,
   }, info) => {
     if (installed)
@@ -118,7 +118,7 @@ for (const installed of [false, true]) {
     await expect(indicator).toBeHidden();
     await expect(card).toContainText('12,3°C');
     await expect(viewport).toHaveAttribute('data-row', '0');
-    await expect(viewport).toHaveAttribute('data-column', '0');
+    await expect(viewport).toHaveAttribute('data-column', '3');
     await expect(viewport.locator('[data-tikitaki-role="current"]')).toHaveCSS(
       'transform',
       'matrix(1, 0, 0, 1, 0, 0)',
@@ -162,7 +162,7 @@ test('silently returns to the previous weather when every provider fails', async
   expect(forecasts).toBe(initialForecasts);
   await viewport.focus();
   await viewport.press('ArrowRight');
-  await expect(viewport).toHaveAttribute('data-column', '1');
+  await expect(viewport).toHaveAttribute('data-column', '4');
 });
 
 test('does not refresh after a short pull or from an hourly card', async ({ page }) => {
@@ -187,9 +187,9 @@ test('does not refresh after a short pull or from an hourly card', async ({ page
   expect(requests).toBe(1);
   await viewport.focus();
   await viewport.press('ArrowRight');
-  await expect(viewport).toHaveAttribute('data-column', '1');
+  await expect(viewport).toHaveAttribute('data-column', '4');
   await pullDown(page);
-  await expect(viewport).toHaveAttribute('data-column', '1');
+  await expect(viewport).toHaveAttribute('data-column', '4');
   await expect(page.locator('[data-refresh-indicator]')).toBeHidden();
   expect(requests).toBe(1);
 });

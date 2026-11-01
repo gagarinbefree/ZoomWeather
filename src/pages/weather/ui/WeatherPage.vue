@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import type { Position } from 'tikitaki';
-import { computed, inject, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, shallowRef, watch } from 'vue';
 import {
   CurrentWeatherCard,
+  addWeatherMaps,
+  weatherPrimaryColumn,
+  weatherRowStartColumn,
   readWeatherSnapshot,
   writeWeatherSnapshot,
   useWeatherGridStore,
@@ -11,6 +14,7 @@ import {
 } from '@/entities/weather';
 import { currentWeatherServicesKey, useCurrentWeatherStore } from '@/features/current-weather';
 import { ForecastCell, forecastServicesKey, useForecastStore } from '@/features/forecast';
+import { WeatherMap } from '@/features/weather-map';
 import { messages } from '@/shared/locales';
 import { LoadingIndicator } from '@/shared/ui/loading-indicator';
 import { baseThemeStyle } from '@/shared/themes';
@@ -27,6 +31,13 @@ const services = inject(currentWeatherServicesKey, null);
 const forecastServices = inject(forecastServicesKey, null);
 const { state, locale } = storeToRefs(weather);
 const text = computed(() => messages[locale.value]);
+const online = shallowRef(navigator.onLine);
+const mapGrid = computed(() => addWeatherMaps(grid.value));
+const mapLocation = computed(() =>
+  state.value.status === 'ready' && state.value.location.source !== 'automatic'
+    ? state.value.location
+    : null,
+);
 let loadRevision = 0;
 
 /**
@@ -124,12 +135,24 @@ function start(): void {
   else weather.offline();
 }
 
+/** onOnline. Restore map connectivity and refresh weather after reconnecting. */
+function onOnline(): void {
+  online.value = true;
+  retry();
+}
+/** onOffline. Retain offline state while map cards mount and unmount. */
+function onOffline(): void {
+  online.value = false;
+}
+
 onMounted(() => {
   start();
-  window.addEventListener('online', retry);
+  window.addEventListener('online', onOnline);
+  window.addEventListener('offline', onOffline);
 });
 onBeforeUnmount(() => {
-  window.removeEventListener('online', retry);
+  window.removeEventListener('online', onOnline);
+  window.removeEventListener('offline', onOffline);
   loadRevision++;
   weather.cancel();
   forecast.cancel();
@@ -154,15 +177,27 @@ watch(
     <h1 class="visually-hidden">{{ text.appName }}</h1>
     <WeatherGrid
       :key="props.navigationReset"
-      :grid="grid"
+      :grid="mapGrid"
+      :primary-column="weatherPrimaryColumn"
+      :row-start-column="weatherRowStartColumn"
       :locale="locale"
       :refresh="reloadWeather"
       :refresh-enabled="state.status === 'ready' && !weather.loading"
       @position-change="onPositionChange"
     >
-      <template #default="{ cell }">
+      <template #default="{ cell, active, navigate }">
+        <WeatherMap
+          v-if="cell.kind === 'map'"
+          :layer="cell.layer"
+          :location="mapLocation"
+          :city="state.status === 'ready' ? state.weather.city : ''"
+          :locale="locale"
+          :active="active"
+          :online="online"
+          @navigate="navigate"
+        />
         <CurrentWeatherCard
-          v-if="cell.kind === 'current' && state.status === 'ready'"
+          v-else-if="cell.kind === 'current' && state.status === 'ready'"
           :weather="state.weather"
           :locale="locale"
           :cached-at="state.weather.serverCachedAt ?? state.cachedAt"
@@ -177,7 +212,7 @@ watch(
           <button type="button" class="btn" @click="retry">{{ text.retry }}</button>
         </section>
         <ForecastCell
-          v-else-if="state.status === 'ready' && cell.kind !== 'current'"
+          v-else-if="state.status === 'ready' && (cell.kind === 'daily' || cell.kind === 'hourly')"
           :cell="cell"
           :day-index="dayIndex(cell.date)"
           :city="state.weather.city"

@@ -307,3 +307,33 @@ it('silently returns from a rejected refresh without turning it into a navigatio
   await environment.settle();
   expect(viewport.attributes('data-column')).toBe('1');
 });
+
+it('keeps the daily column aligned without maps or placeholders on future days', async () => {
+  const { addWeatherMaps, weatherPrimaryColumn, weatherRowStartColumn } =
+    await import('@/entities/weather');
+  const wrapper = mount(WeatherGrid, {
+    attachTo: document.body,
+    props: {
+      grid: addWeatherMaps(fixtureGrid),
+      primaryColumn: weatherPrimaryColumn,
+      rowStartColumn: weatherRowStartColumn,
+    },
+    slots: { default: ({ cell }: { readonly cell: WeatherCell }) => h(ProbeCell, { id: cell.id }) },
+    global: { plugins: [createPinia()] },
+  });
+  wrappers.push(wrapper);
+  await nextTick();
+  const viewport = wrapper.get('.weather-viewport');
+  expect(viewport.attributes('data-column')).toBe('3');
+  await viewport.trigger('keydown', { key: 'ArrowLeft' });
+  await environment.settle();
+  expect(viewport.attributes('data-active-cell')).toBe('2026-10-26/map/temp');
+  await viewport.trigger('keydown', { key: 'ArrowDown' });
+  await environment.settle();
+  expect(viewport.attributes('data-column')).toBe('3');
+  expect(viewport.attributes('data-active-cell')).toBe('2026-10-27/daily');
+  expect(wrapper.find('[data-tikitaki-role="right"]').exists()).toBe(false);
+  await viewport.trigger('keydown', { key: 'ArrowUp' });
+  await environment.settle();
+  expect(viewport.attributes('data-active-cell')).toBe('2026-10-26/current');
+});

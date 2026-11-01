@@ -1,6 +1,7 @@
 // Global styles shared by the browser PWA and Android entry points.
 @use 'bootstrap/scss/root';
 @use 'weather-refresh';
+@use 'weather-map';
 @use 'bootstrap/scss/content/reboot';
 @use 'bootstrap/scss/spinner';
 @use 'bootstrap/scss/buttons/button';

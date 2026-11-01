@@ -19,15 +19,17 @@
 
 Each card fills the screen. Current weather appears first, followed by the forecast for the days ahead. Soft card colors change with the weather.
 
-**Swipe left or right** to see another time on the selected day.
+**Swipe left** from current weather to see the coming hours. **Swipe right** to open the temperature map, then wind, then pressure. Maps are available beside current weather only. Swipe the map header or use its buttons to switch cards; drag and pinch inside the map to explore it.
 
-**Swipe up or down** to move between days.
+**Swipe up or down** to move between days. Each vertical transition opens the daily weather card, including when you leave a map or an hourly forecast.
 
 **Pull down on current weather** to refresh it. A spinner appears while loading. If the request fails, your last current weather stays on screen.
 
 **See a loading indicator** while a card's forecast is on its way; you can keep browsing.
 
 Cards show the temperature, conditions, and helpful details such as humidity, wind, and chance of rain. The number of forecast days depends on the available weather data.
+
+Maps are provided by [Windy](https://www.windy.com/) and need an internet connection. Their forecast can differ from the weather cards.
 
 ### Weather where you are
 
@@ -53,15 +55,17 @@ The interface is available in English and Russian. It is comfortable to use on a
 
 Каждая карточка занимает экран целиком. Сначала появляется текущая погода, затем прогноз на другие дни. Цвета карточек мягко меняются вместе с погодой.
 
-**Свайп влево или вправо** показывает погоду в другое время выбранного дня.
+**Свайп влево** от текущей погоды показывает прогноз по часам. **Свайп вправо** открывает карту температуры, затем ветра и давления. Карты есть только рядом с текущей погодой. Листайте карточки свайпом по заголовку карты или кнопками, а внутри карты перемещайте и масштабируйте её пальцами.
 
-**Свайп вверх или вниз** открывает прогноз на следующий или предыдущий день.
+**Свайп вверх или вниз** открывает погодную карточку следующего или предыдущего дня, в том числе при переходе с карты или почасового прогноза.
 
 **Потяните текущую погоду вниз**, чтобы обновить её. Пока идёт загрузка, появится спиннер. Если запрос не удался, на экране останется последняя текущая погода.
 
 **Индикатор загрузки** появляется, пока прогноз для карточки готовится. Можно продолжать листать.
 
 На карточках есть температура, погодные условия и полезные подробности: влажность, ветер, вероятность дождя и другие доступные показатели. Число дней прогноза зависит от доступных данных.
+
+Карты предоставляет [Windy](https://www.windy.com/), для них нужен интернет. Прогноз на карте может отличаться от данных погодных карточек.
 
 ### Погода там, где вы находитесь
 

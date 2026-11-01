@@ -23,3 +23,10 @@ export type {
 } from './model/types';
 export { weatherProviderPriority } from './model/weather-provider';
 export type { WeatherProvider } from './model/weather-provider';
+
+export {
+  addWeatherMaps,
+  weatherPrimaryColumn,
+  weatherRowStartColumn,
+} from './model/add-weather-maps';
+export type { WeatherMapLayer, WeatherMapCell } from './model/types';

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, shallowRef, useId, type Slot } from 'vue';
-import type { Position } from 'tikitaki';
+import type { Direction, Position } from 'tikitaki';
 import type { WeatherCell, WeatherGrid } from '@/entities/weather';
 import { messages } from '@/shared/locales';
 import { LoadingIndicator } from '@/shared/ui/loading-indicator';
@@ -12,18 +12,26 @@ import {
 const props = withDefaults(
   defineProps<{
     readonly grid: WeatherGrid;
+    readonly primaryColumn?: number;
+    readonly rowStartColumn?: (row: number) => number;
     readonly locale?: 'ru' | 'en';
     readonly refresh?: ((signal: AbortSignal) => Promise<void>) | null;
     readonly refreshEnabled?: boolean;
   }>(),
-  { locale: 'ru', refreshEnabled: true, refresh: null },
+  { locale: 'ru', refreshEnabled: true, refresh: null, primaryColumn: 0, rowStartColumn: () => 0 },
 );
 const emit = defineEmits<{ positionChange: [position: Position]; error: [error: Error] }>();
-defineSlots<{ default?: Slot<{ readonly cell: WeatherCell }> }>();
+defineSlots<{
+  default?: Slot<{
+    readonly cell: WeatherCell;
+    readonly active: boolean;
+    readonly navigate: (direction: Direction) => void;
+  }>;
+}>();
 const container = shallowRef<HTMLElement | null>(null);
 const instructionId = useId();
 const text = computed(() => messages[props.locale]);
-const { cells, position, failed, refreshState, onKeydown } = useWeatherSwipe(
+const { cells, position, failed, refreshState, onKeydown, navigate } = useWeatherSwipe(
   container,
   () => props.grid,
   (next) => {
@@ -34,6 +42,8 @@ const { cells, position, failed, refreshState, onKeydown } = useWeatherSwipe(
   },
   (signal) => props.refresh?.(signal) ?? Promise.resolve(),
   () => props.refresh !== null && props.refreshEnabled,
+  props.primaryColumn,
+  props.rowStartColumn,
 );
 const refreshing = computed(() => refreshState.value?.phase === 'loading');
 const refreshVisible = computed(
@@ -46,7 +56,11 @@ const refreshLabel = computed(() =>
       ? text.value.pullToRefresh
       : text.value.refreshingWeather,
 );
-const activeId = computed(() => props.grid[position.value.row]?.[position.value.col]?.id);
+const activeId = computed(
+  () =>
+    props.grid[position.value.row]?.[position.value.col - props.rowStartColumn(position.value.row)]
+      ?.id,
+);
 </script>
 
 <template>
@@ -77,7 +91,7 @@ const activeId = computed(() => props.grid[position.value.row]?.[position.value.
   <p :id="instructionId" class="visually-hidden">{{ text.swipeInstructions }}</p>
   <Teleport v-for="cell in cells" :key="cell.key" :to="cell.host">
     <section class="weather-cell" :data-cell-id="cell.item.id">
-      <slot :cell="cell.item">
+      <slot :cell="cell.item" :active="cell.item.id === activeId" :navigate="navigate">
         <LoadingIndicator :label="text.loadingWeather" />
       </slot>
     </section>

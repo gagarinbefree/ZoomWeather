@@ -17,6 +17,7 @@ interface WeatherSwipeView {
   readonly failed: Readonly<ShallowRef<boolean>>;
   readonly refreshState: Readonly<ShallowRef<EdgeActionState | null>>;
   readonly onKeydown: (event: KeyboardEvent) => void;
+  readonly navigate: (direction: Direction) => void;
 }
 
 /** Visible pull threshold and loading area height in CSS pixels. */
@@ -34,12 +35,17 @@ const keyboardDirections: Readonly<Record<string, Direction>> = {
  *
  * @param grid The next available forecast grid.
  * @param id The identity of the selected forecast cell.
+ * @param rowStartColumn The logical start of each forecast row.
  * @returns The new coordinates of the same forecast cell when it is still available.
  */
-function findCellPosition(grid: WeatherGrid, id: string | null): Position | undefined {
+function findCellPosition(
+  grid: WeatherGrid,
+  id: string | null,
+  rowStartColumn: (row: number) => number,
+): Position | undefined {
   for (const [row, cells] of grid.entries()) {
     const col = cells.findIndex((cell) => cell.id === id);
-    if (col !== -1) return { row, col };
+    if (col !== -1) return { row, col: col + rowStartColumn(row) };
   }
   return undefined;
 }
@@ -53,6 +59,8 @@ function findCellPosition(grid: WeatherGrid, id: string | null): Position | unde
  * @param onError The callback for a controller failure.
  * @param refresh The optional cancellable current weather refresh.
  * @param canRefresh Whether the page can start a new weather request.
+ * @param primaryColumn The shared daily anchor column for vertical navigation.
+ * @param rowStartColumn The logical column where each forecast row begins.
  * @returns Reactive cell hosts and navigation state owned by the current Vue component.
  */
 export function useWeatherSwipe(
@@ -62,6 +70,8 @@ export function useWeatherSwipe(
   onError: (error: Error) => void,
   refresh?: (signal: AbortSignal) => Promise<void>,
   canRefresh: () => boolean = () => true,
+  primaryColumn = 0,
+  rowStartColumn: (row: number) => number = () => 0,
 ): WeatherSwipeView {
   const bridge = createVueCellAdapter<WeatherCell>();
   const controller = shallowRef<SwipeEngine<WeatherCell> | null>(null);
@@ -117,7 +127,7 @@ export function useWeatherSwipe(
   function publishPosition(next: Position): void {
     if (disposed || updating) return;
     position.value = next;
-    selectedId = readGrid()[next.row]?.[next.col]?.id ?? null;
+    selectedId = readGrid()[next.row]?.[next.col - rowStartColumn(next.row)]?.id ?? null;
     onPositionChange(next);
   }
 
@@ -131,7 +141,7 @@ export function useWeatherSwipe(
     const engine = controller.value;
     if (!engine) return;
     const token = ++revision;
-    const target = findCellPosition(grid, selectedId);
+    const target = findCellPosition(grid, selectedId, rowStartColumn);
     updating = true;
     try {
       engine.updateGrid(grid);
@@ -166,6 +176,14 @@ export function useWeatherSwipe(
     void controller.value.navigate(direction).catch(reportError);
   }
 
+  /**
+   * navigate. Move one cell from an accessible map navigation control.
+   * @param direction The requested content movement.
+   */
+  function navigate(direction: Direction): void {
+    void controller.value?.navigate(direction).catch(reportError);
+  }
+
   onMounted(() => {
     if (!container.value) return;
     const reduceMotion =
@@ -175,6 +193,8 @@ export function useWeatherSwipe(
       controller.value = createSwipeEngine({
         container: container.value,
         grid: readGrid(),
+        initialPosition: { row: 0, col: primaryColumn },
+        navigation: { primaryColumn, rowStartColumn },
         adapter: bridge.adapter,
         onPositionChange: publishPosition,
         onError: reportError,
@@ -185,8 +205,8 @@ export function useWeatherSwipe(
                 ...weatherRefreshOptions,
                 enabled: (selected: Position): boolean =>
                   selected.row === 0 &&
-                  selected.col === 0 &&
-                  readGrid()[0]?.[0]?.kind === 'current' &&
+                  selected.col === primaryColumn &&
+                  readGrid()[0]?.[primaryColumn]?.kind === 'current' &&
                   canRefresh(),
                 onTrigger: ({ signal }: EdgeActionContext): Promise<void> => refreshWeather(signal),
                 onStateChange: (state: EdgeActionState): void => {
@@ -208,5 +228,5 @@ export function useWeatherSwipe(
     disposed = true;
     stop();
   });
-  return { cells: bridge.cells, position, failed, refreshState, onKeydown };
+  return { cells: bridge.cells, position, failed, refreshState, onKeydown, navigate };
 }
