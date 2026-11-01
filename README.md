@@ -80,3 +80,9 @@ ZoomWeather попросит разрешение определить ваше 
 Интерфейс доступен на русском и английском языках. Сайт удобно открывать на телефоне; на компьютере карточка сохраняет вертикальный вид, а прогноз можно листать стрелками клавиатуры.
 
 [Смотреть погоду](https://gagarinbefree.github.io/ZoomWeather/)
+
+## TikiTaki
+
+ZoomWeather is built using [TikiTaki](https://github.com/gagarinbefree/TikiTaki), the library behind its swipe navigation.
+
+ZoomWeather разработано с использованием [TikiTaki](https://github.com/gagarinbefree/TikiTaki), библиотеки навигации свайпами.
