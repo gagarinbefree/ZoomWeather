@@ -308,15 +308,16 @@ it('silently returns from a rejected refresh without turning it into a navigatio
   expect(viewport.attributes('data-column')).toBe('1');
 });
 
-it('keeps the daily column aligned without maps or placeholders on future days', async () => {
+it('keeps the daily column aligned when future maps are unavailable', async () => {
   const { addWeatherMaps, weatherPrimaryColumn, weatherRowStartColumn } =
     await import('@/entities/weather');
+  const grid = addWeatherMaps(fixtureGrid, { now: Date.UTC(2026, 10, 1), timeZone: 'UTC' });
   const wrapper = mount(WeatherGrid, {
     attachTo: document.body,
     props: {
-      grid: addWeatherMaps(fixtureGrid),
+      grid,
       primaryColumn: weatherPrimaryColumn,
-      rowStartColumn: weatherRowStartColumn,
+      rowStartColumn: (row: number) => weatherRowStartColumn(grid, row),
     },
     slots: { default: ({ cell }: { readonly cell: WeatherCell }) => h(ProbeCell, { id: cell.id }) },
     global: { plugins: [createPinia()] },

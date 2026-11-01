@@ -26,11 +26,18 @@
     margin: 0;
   }
   .weather-map__navigation-space {
-    visibility: hidden;
+    background: none;
+    border-color: transparent;
+    color: var(--weather-muted);
+    cursor: default;
     pointer-events: none;
   }
   .weather-map__navigation-space::before {
     content: '\00a0';
+  }
+  .weather-map__time {
+    font-size: 0.875rem;
+    white-space: nowrap;
   }
   .weather-map .btn {
     --btn-bg: var(--weather-surface);

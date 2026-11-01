@@ -32,7 +32,28 @@ const forecastServices = inject(forecastServicesKey, null);
 const { state, locale } = storeToRefs(weather);
 const text = computed(() => messages[locale.value]);
 const online = shallowRef(navigator.onLine);
-const mapGrid = computed(() => addWeatherMaps(grid.value));
+const mapNow = shallowRef(Date.now());
+const mapGrid = computed(() =>
+  addWeatherMaps(grid.value, {
+    now: mapNow.value,
+    timeZone: state.value.status === 'ready' ? state.value.weather.timeZone : 'UTC',
+  }),
+);
+let mapClock: ReturnType<typeof setInterval> | undefined;
+
+/** updateMapClock. Recheck available forecast dates when the app returns or a minute passes. */
+function updateMapClock(): void {
+  mapNow.value = Date.now();
+}
+
+/**
+ * mapRowStart. Keep daily weather in the main column with or without forecast maps.
+ * @param row The selected forecast row.
+ * @returns The logical column of the first real cell.
+ */
+function mapRowStart(row: number): number {
+  return weatherRowStartColumn(mapGrid.value, row);
+}
 const mapLocation = computed(() =>
   state.value.status === 'ready' && state.value.location.source !== 'automatic'
     ? state.value.location
@@ -137,6 +158,7 @@ function start(): void {
 
 /** onOnline. Restore map connectivity and refresh weather after reconnecting. */
 function onOnline(): void {
+  updateMapClock();
   online.value = true;
   retry();
 }
@@ -147,10 +169,14 @@ function onOffline(): void {
 
 onMounted(() => {
   start();
+  mapClock = setInterval(updateMapClock, 60000);
+  window.addEventListener('focus', updateMapClock);
   window.addEventListener('online', onOnline);
   window.addEventListener('offline', onOffline);
 });
 onBeforeUnmount(() => {
+  clearInterval(mapClock);
+  window.removeEventListener('focus', updateMapClock);
   window.removeEventListener('online', onOnline);
   window.removeEventListener('offline', onOffline);
   loadRevision++;
@@ -179,7 +205,7 @@ watch(
       :key="props.navigationReset"
       :grid="mapGrid"
       :primary-column="weatherPrimaryColumn"
-      :row-start-column="weatherRowStartColumn"
+      :row-start-column="mapRowStart"
       :locale="locale"
       :refresh="reloadWeather"
       :refresh-enabled="state.status === 'ready' && !weather.loading"
@@ -189,6 +215,8 @@ watch(
         <WeatherMap
           v-if="cell.kind === 'map'"
           :layer="cell.layer"
+          :timestamp="cell.timestamp"
+          :time-zone="state.status === 'ready' ? state.weather.timeZone : 'UTC'"
           :location="mapLocation"
           :city="state.status === 'ready' ? state.weather.city : ''"
           :locale="locale"

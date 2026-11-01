@@ -37,7 +37,7 @@ export type WeatherMapLayer = 'temp' | 'wind' | 'pressure';
 export interface WeatherMapCell extends WeatherCellIdentity {
   readonly kind: 'map';
   readonly layer: WeatherMapLayer;
-  readonly timestamp?: never;
+  readonly timestamp?: number;
 }
 export type WeatherCell =
   CurrentWeatherCell | DailyWeatherCell | HourlyWeatherCell | WeatherMapCell;

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, shallowRef, watch } from 'vue';
 import type { WeatherMapLayer } from '@/entities/weather';
+import { isWindyForecastAvailable } from '@/shared/weather/windy-forecast-time';
 import { windyConfig } from '@/shared/config/windy';
 import { messages, type Locale } from '@/shared/locales';
 import { sunnyThemeStyle } from '@/shared/themes';
@@ -14,19 +15,54 @@ const props = withDefaults(
     readonly city: string;
     readonly locale: Locale;
     readonly active: boolean;
+    readonly timestamp?: number | undefined;
+    readonly timeZone?: string;
     readonly online?: boolean;
   }>(),
-  { online: true },
+  { online: true, timeZone: 'UTC', timestamp: undefined },
 );
 const text = computed(() => messages[props.locale]);
 const title = computed(() => text.value.mapLayers[props.layer]);
 const loaded = shallowRef(false);
 const failed = shallowRef(false);
 const revision = shallowRef(0);
+const requestedAt = shallowRef(Date.now());
+const forecastAvailable = computed(
+  () =>
+    props.timestamp === undefined || isWindyForecastAvailable(props.timestamp, requestedAt.value),
+);
+const displayTime = computed(() => props.timestamp ?? requestedAt.value);
+const timeLabel = computed(() =>
+  new Intl.DateTimeFormat(props.locale, {
+    timeZone: props.timeZone,
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(displayTime.value),
+);
 const src = computed(() =>
-  props.location ? createWindyUrl(props.layer, props.location, props.locale) : null,
+  props.active && props.location && forecastAvailable.value
+    ? createWindyUrl(
+        props.layer,
+        props.location,
+        props.locale,
+        props.timestamp === undefined
+          ? undefined
+          : { timestamp: props.timestamp, now: requestedAt.value },
+      )
+    : null,
 );
 const enabled = computed(() => props.active && props.online && src.value !== null);
+watch(
+  [(): boolean => props.active, (): boolean => props.online],
+  () => {
+    if (props.active) requestedAt.value = Date.now();
+  },
+  { flush: 'sync' },
+);
 let timeout: ReturnType<typeof setTimeout> | undefined;
 
 /** stopTimer. Release the pending map loading timeout. */
@@ -36,6 +72,7 @@ function stopTimer(): void {
 }
 /** restart. Retry the selected iframe without changing weather data. */
 function restart(): void {
+  requestedAt.value = Date.now();
   revision.value++;
 }
 /** finish. Stop the spinner when the embedded document finishes loading. */
@@ -66,7 +103,11 @@ onBeforeUnmount(stopTimer);
       <h2>{{ title }}</h2>
       <p>{{ city }}</p>
       <p class="weather-map__hint">{{ text.mapSwipeHint }}</p>
-      <div class="weather-map__navigation-space btn" aria-hidden="true"></div>
+      <div class="weather-map__navigation-space btn">
+        <time class="weather-map__time" :datetime="new Date(displayTime).toISOString()">{{
+          timeLabel
+        }}</time>
+      </div>
     </header>
     <div class="weather-map__body">
       <iframe
@@ -81,6 +122,9 @@ onBeforeUnmount(stopTimer);
       <div v-if="active && !props.online" class="weather-map__notice">{{ text.mapOffline }}</div>
       <div v-else-if="active && !location" class="weather-map__notice">
         {{ text.mapLocationPending }}
+      </div>
+      <div v-else-if="active && !forecastAvailable" class="weather-map__notice">
+        {{ text.mapForecastUnavailable }}
       </div>
       <div v-else-if="active && failed" class="weather-map__notice">
         <p>{{ text.mapFailed }}</p>

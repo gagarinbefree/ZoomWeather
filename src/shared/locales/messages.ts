@@ -1,6 +1,7 @@
 export const messages = {
   ru: {
     mapLayers: { temp: 'Карта температуры', wind: 'Карта ветра', pressure: 'Карта давления' },
+    mapForecastUnavailable: 'Карта для этой даты недоступна',
     mapLoading: 'Загружаем карту...',
     mapFailed: 'Не удалось загрузить карту',
     mapOffline: 'Для карты нужен интернет',
@@ -90,6 +91,7 @@ export const messages = {
   },
   en: {
     mapLayers: { temp: 'Temperature map', wind: 'Wind map', pressure: 'Pressure map' },
+    mapForecastUnavailable: 'No map is available for this date',
     mapLoading: 'Loading map...',
     mapFailed: 'Unable to load the map',
     mapOffline: 'Maps need an internet connection',

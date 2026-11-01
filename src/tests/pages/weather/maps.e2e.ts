@@ -10,6 +10,9 @@ test.use({
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-10-26T05:37:00Z'));
   await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.route('https://gagarinbefree.clodocd.com/api/openweathermap/**', (route) =>
+    route.fulfill({ status: 503, json: {} }),
+  );
   await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/**', (route) =>
     route.fulfill({ status: 503, json: {} }),
   );
@@ -83,6 +86,8 @@ test('opens temperature wind and pressure to the left and returns vertically to 
     await swipeRight(page);
     const card = page.getByRole('article', { name: title });
     await expect(card).toBeVisible();
+    await expect(card.locator('time')).toHaveAttribute('datetime', '2026-10-26T05:37:00.000Z');
+    await expect(card.locator('time')).toContainText('10:37');
     await expect(card.locator('header button')).toHaveCount(0);
     const reservedHeight = await card
       .locator('.weather-map__navigation-space')
@@ -113,8 +118,15 @@ test('opens temperature wind and pressure to the left and returns vertically to 
   await expect(page.locator('iframe')).toHaveCount(0);
   await viewport.press('ArrowLeft');
   await expect(viewport).toHaveAttribute('data-row', '1');
-  await expect(viewport).toHaveAttribute('data-column', '3');
-  await expect(viewport.locator('[data-tikitaki-role="right"]')).toHaveCount(0);
+  await expect(viewport).toHaveAttribute('data-column', '2');
+  const tomorrowMap = page.locator('[data-tikitaki-role="current"] .weather-map');
+  await expect(tomorrowMap.locator('time')).toHaveAttribute('datetime', '2026-10-27T07:00:00.000Z');
+  await expect(tomorrowMap.locator('time')).toContainText('12:00');
+  await expect(tomorrowMap.locator('iframe')).toHaveAttribute('src', /calendar=in/);
+  const forecastUrl = new URL((await tomorrowMap.locator('iframe').getAttribute('src')) ?? '');
+  expect(Number(forecastUrl.searchParams.get('forecast'))).toBeCloseTo(
+    (Date.UTC(2026, 9, 27, 7) - Date.UTC(2026, 9, 26, 5, 37)) / 3600000,
+  );
   await viewport.press('ArrowUp');
   await expect(viewport).toHaveAttribute('data-active-cell', '2026-10-26/current');
   await expect(viewport).toHaveAttribute('data-column', '3');
@@ -141,4 +153,56 @@ test('keeps offline map failures separate from the last weather and permits leav
   await viewport.press('ArrowRight');
   await expect(viewport).toHaveAttribute('data-column', '3');
   await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
+});
+
+test('omits maps beyond the supported calendar and keeps hourly cells beside daily weather', async ({
+  page,
+}) => {
+  const first = forecastResponse.forecast.forecastday[0];
+  if (!first) throw new Error('Missing forecast fixture');
+  const days = Array.from({ length: 8 }, (_, index) => ({
+    ...first,
+    date: new Date(Date.UTC(2026, 9, 26 + index)).toISOString().slice(0, 10),
+    hour: first.hour.map((hour) => ({ ...hour, time_epoch: hour.time_epoch + index * 86400 })),
+  }));
+  await page.route(
+    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
+    (route) => route.fulfill({ json: { forecast: { forecastday: days } } }),
+  );
+  await page.route('https://embed.windy.com/**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<html><body>Map</body></html>' }),
+  );
+  await page.goto('./');
+  const viewport = page.locator('.weather-viewport');
+  await expect(viewport).toHaveAttribute('data-grid-rows', '8');
+  await viewport.focus();
+  await viewport.press('ArrowDown');
+  await expect(viewport).toHaveAttribute('data-active-cell', '2026-10-27/daily');
+  await viewport.press('ArrowRight');
+  await expect(viewport).toHaveAttribute('data-column', '4');
+  await expect(page.locator('[data-tikitaki-role="current"] article')).toHaveAttribute(
+    'aria-label',
+    'Почасовой прогноз',
+  );
+  await expect(page.locator('iframe')).toHaveCount(0);
+  await viewport.press('ArrowDown');
+  await expect(viewport).toHaveAttribute('data-column', '3');
+  for (let row = 3; row <= 5; row++) {
+    await viewport.press('ArrowDown');
+    await expect(viewport).toHaveAttribute('data-row', String(row));
+  }
+  await viewport.press('ArrowLeft');
+  await expect(viewport).toHaveAttribute('data-active-cell', '2026-10-31/map/temp');
+  await expect(page.locator('[data-tikitaki-role="current"] time')).toHaveAttribute(
+    'datetime',
+    '2026-10-31T07:00:00.000Z',
+  );
+  await viewport.press('ArrowDown');
+  await expect(viewport).toHaveAttribute('data-active-cell', '2026-11-01/daily');
+  await viewport.press('ArrowLeft');
+  await expect(viewport).toHaveAttribute('data-column', '3');
+  await expect(viewport.locator('[data-tikitaki-role="right"]')).toHaveCount(0);
+  await expect(page.locator('iframe')).toHaveCount(0);
+  await viewport.press('ArrowUp');
+  await expect(viewport).toHaveAttribute('data-active-cell', '2026-10-31/daily');
 });
