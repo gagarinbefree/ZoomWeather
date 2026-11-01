@@ -2,7 +2,11 @@ import { expect, test, type Page } from '@/tests/shared/lib/browser-test';
 import { currentResponse } from '@/tests/entities/weather/api/current-fixture';
 import { forecastResponse } from '@/tests/entities/weather/api/forecast-fixture';
 
-test.use({ permissions: ['geolocation'], geolocation: { latitude: 58, longitude: 56.25 } });
+test.use({
+  serviceWorkers: 'block',
+  permissions: ['geolocation'],
+  geolocation: { latitude: 58, longitude: 56.25 },
+});
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-10-26T05:37:00Z'));
   await page.emulateMedia({ reducedMotion: 'reduce' });
