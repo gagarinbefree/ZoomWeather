@@ -79,6 +79,23 @@ test('opens temperature wind and pressure to the left and returns vertically to 
     await swipeRight(page);
     const card = page.getByRole('article', { name: title });
     await expect(card).toBeVisible();
+    await expect(card.locator('header button')).toHaveCount(0);
+    const reservedHeight = await card
+      .locator('.weather-map__navigation-space')
+      .evaluate((space) => {
+        const reference = document.createElement('button');
+        reference.className = 'btn';
+        reference.textContent = 'Weather';
+        space.parentElement?.append(reference);
+        const heights = {
+          actual: space.getBoundingClientRect().height,
+          expected: reference.getBoundingClientRect().height,
+        };
+        reference.remove();
+        return heights;
+      });
+    expect(reservedHeight.actual).toBeGreaterThan(0);
+    expect(reservedHeight.actual).toBeCloseTo(reservedHeight.expected, 1);
     await expect(card.locator('iframe')).toHaveAttribute('src', new RegExp(`overlay=${layer}`));
     await expect(page.locator('iframe')).toHaveCount(1);
     await expect.poll(() => requests.at(-1)?.searchParams.get('overlay')).toBe(layer);
@@ -116,7 +133,8 @@ test('keeps offline map failures separate from the last weather and permits leav
   const card = page.getByRole('article', { name: 'Карта температуры' });
   await expect(card).toContainText('Для карты нужен интернет');
   await expect(page.locator('iframe')).toHaveCount(0);
-  await card.getByRole('button', { name: 'Погода', exact: true }).click();
+  await viewport.focus();
+  await viewport.press('ArrowRight');
   await expect(viewport).toHaveAttribute('data-column', '3');
   await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
 });

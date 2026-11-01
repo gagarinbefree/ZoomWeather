@@ -25,10 +25,12 @@
   .weather-map__header p {
     margin: 0;
   }
-  .weather-map__header nav {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--weather-map-gap);
+  .weather-map__navigation-space {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .weather-map__navigation-space::before {
+    content: '\00a0';
   }
   .weather-map .btn {
     --btn-bg: var(--weather-surface);

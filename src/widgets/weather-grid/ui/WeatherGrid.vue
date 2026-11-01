@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, shallowRef, useId, type Slot } from 'vue';
-import type { Direction, Position } from 'tikitaki';
+import type { Position } from 'tikitaki';
 import type { WeatherCell, WeatherGrid } from '@/entities/weather';
 import { messages } from '@/shared/locales';
 import { LoadingIndicator } from '@/shared/ui/loading-indicator';
@@ -25,13 +25,12 @@ defineSlots<{
   default?: Slot<{
     readonly cell: WeatherCell;
     readonly active: boolean;
-    readonly navigate: (direction: Direction) => void;
   }>;
 }>();
 const container = shallowRef<HTMLElement | null>(null);
 const instructionId = useId();
 const text = computed(() => messages[props.locale]);
-const { cells, position, failed, refreshState, onKeydown, navigate } = useWeatherSwipe(
+const { cells, position, failed, refreshState, onKeydown } = useWeatherSwipe(
   container,
   () => props.grid,
   (next) => {
@@ -91,7 +90,7 @@ const activeId = computed(
   <p :id="instructionId" class="visually-hidden">{{ text.swipeInstructions }}</p>
   <Teleport v-for="cell in cells" :key="cell.key" :to="cell.host">
     <section class="weather-cell" :data-cell-id="cell.item.id">
-      <slot :cell="cell.item" :active="cell.item.id === activeId" :navigate="navigate">
+      <slot :cell="cell.item" :active="cell.item.id === activeId">
         <LoadingIndicator :label="text.loadingWeather" />
       </slot>
     </section>

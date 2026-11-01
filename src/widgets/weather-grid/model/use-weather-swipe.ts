@@ -17,7 +17,6 @@ interface WeatherSwipeView {
   readonly failed: Readonly<ShallowRef<boolean>>;
   readonly refreshState: Readonly<ShallowRef<EdgeActionState | null>>;
   readonly onKeydown: (event: KeyboardEvent) => void;
-  readonly navigate: (direction: Direction) => void;
 }
 
 /** Visible pull threshold and loading area height in CSS pixels. */
@@ -176,14 +175,6 @@ export function useWeatherSwipe(
     void controller.value.navigate(direction).catch(reportError);
   }
 
-  /**
-   * navigate. Move one cell from an accessible map navigation control.
-   * @param direction The requested content movement.
-   */
-  function navigate(direction: Direction): void {
-    void controller.value?.navigate(direction).catch(reportError);
-  }
-
   onMounted(() => {
     if (!container.value) return;
     const reduceMotion =
@@ -228,5 +219,5 @@ export function useWeatherSwipe(
     disposed = true;
     stop();
   });
-  return { cells: bridge.cells, position, failed, refreshState, onKeydown, navigate };
+  return { cells: bridge.cells, position, failed, refreshState, onKeydown };
 }

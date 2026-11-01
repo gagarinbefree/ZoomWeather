@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, shallowRef, watch } from 'vue';
-import type { Direction } from 'tikitaki';
 import type { WeatherMapLayer } from '@/entities/weather';
 import { windyConfig } from '@/shared/config/windy';
 import { messages, type Locale } from '@/shared/locales';
@@ -19,7 +18,6 @@ const props = withDefaults(
   }>(),
   { online: true },
 );
-const emit = defineEmits<{ navigate: [direction: Direction] }>();
 const text = computed(() => messages[props.locale]);
 const title = computed(() => text.value.mapLayers[props.layer]);
 const loaded = shallowRef(false);
@@ -68,20 +66,7 @@ onBeforeUnmount(stopTimer);
       <h2>{{ title }}</h2>
       <p>{{ city }}</p>
       <p class="weather-map__hint">{{ text.mapSwipeHint }}</p>
-      <nav :aria-label="text.mapNavigation">
-        <button
-          type="button"
-          class="btn"
-          :disabled="layer === 'pressure'"
-          data-map-previous
-          @click="emit('navigate', 'right')"
-        >
-          {{ text.mapPrevious }}
-        </button>
-        <button type="button" class="btn" data-map-next @click="emit('navigate', 'left')">
-          {{ layer === 'temp' ? text.weather : text.mapNext }}
-        </button>
-      </nav>
+      <div class="weather-map__navigation-space btn" aria-hidden="true"></div>
     </header>
     <div class="weather-map__body">
       <iframe

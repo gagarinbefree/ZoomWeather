@@ -26,7 +26,7 @@ describe('WeatherMap', () => {
       wrapper.unmount();
     }
   });
-  it('provides retry on a map timeout and emits navigation without entering the frame', async () => {
+  it('provides retry on a map timeout without navigation buttons', async () => {
     vi.useFakeTimers();
     const wrapper = mount(WeatherMap, { props: { ...props, active: true } });
     try {
@@ -34,8 +34,8 @@ describe('WeatherMap', () => {
       expect(wrapper.text()).toContain('Не удалось загрузить карту');
       await wrapper.get('[data-map-retry]').trigger('click');
       expect(wrapper.find('[role="status"]').exists()).toBe(true);
-      await wrapper.get('[data-map-next]').trigger('click');
-      expect(wrapper.emitted('navigate')).toEqual([['left']]);
+      expect(wrapper.find('header button').exists()).toBe(false);
+      expect(wrapper.get('.weather-map__navigation-space').attributes('aria-hidden')).toBe('true');
     } finally {
       wrapper.unmount();
     }

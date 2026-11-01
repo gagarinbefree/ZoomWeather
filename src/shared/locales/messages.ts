@@ -8,9 +8,6 @@ export const messages = {
     mapLocationInvalid: 'Некорректные координаты карты',
     mapSwipeHint: 'Листайте карты свайпом по заголовку',
     mapGestureHint: 'Двигайте и масштабируйте карту пальцами',
-    mapNavigation: 'Навигация по картам',
-    mapPrevious: 'Назад',
-    mapNext: 'Далее',
     mapOpen: 'Открыть в Windy',
 
     appName: 'ZoomWeather',
@@ -100,9 +97,6 @@ export const messages = {
     mapLocationInvalid: 'Invalid map coordinates',
     mapSwipeHint: 'Swipe the header to switch maps',
     mapGestureHint: 'Drag and pinch to explore the map',
-    mapNavigation: 'Map navigation',
-    mapPrevious: 'Back',
-    mapNext: 'Next',
     mapOpen: 'Open in Windy',
 
     appName: 'ZoomWeather',

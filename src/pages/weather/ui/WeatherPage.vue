@@ -185,7 +185,7 @@ watch(
       :refresh-enabled="state.status === 'ready' && !weather.loading"
       @position-change="onPositionChange"
     >
-      <template #default="{ cell, active, navigate }">
+      <template #default="{ cell, active }">
         <WeatherMap
           v-if="cell.kind === 'map'"
           :layer="cell.layer"
@@ -194,7 +194,6 @@ watch(
           :locale="locale"
           :active="active"
           :online="online"
-          @navigate="navigate"
         />
         <CurrentWeatherCard
           v-else-if="cell.kind === 'current' && state.status === 'ready'"
