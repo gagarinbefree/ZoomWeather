@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import WeatherMap from '@/features/weather-map/ui/WeatherMap.vue';
+import theme from '@assets/themes/default.json';
 
 const props = {
   layer: 'temp' as const,
@@ -117,3 +118,35 @@ it('keeps daily maps at local noon after leaving and reopening them and rejects 
     wrapper.unmount();
   }
 });
+
+it.each([
+  { conditionCode: 0, isDay: true, name: 'ClearDay' },
+  { conditionCode: 0, isDay: false, name: 'ClearNight' },
+  { conditionCode: 3, isDay: true, name: 'Cloudy' },
+  { conditionCode: 61, isDay: true, name: 'Rain' },
+  { conditionCode: 71, isDay: true, name: 'Snow' },
+  { conditionCode: 95, isDay: true, name: 'Thunder' },
+] as const)(
+  'uses the shared $name weather colors for map cards',
+  async ({ conditionCode, isDay, name }) => {
+    const wrapper = mount(WeatherMap, { props: { ...props, conditionCode, isDay } });
+    try {
+      const card = wrapper.get<HTMLElement>('article').element;
+      expect(card.style.getPropertyValue('--card-background')).toBe(
+        theme.colors[`Weather.${name}.Forecast`],
+      );
+      expect(card.style.getPropertyValue('--card-header-start')).toBe(
+        theme.colors[`Weather.${name}.HeaderStart`],
+      );
+      expect(card.style.getPropertyValue('--card-header-end')).toBe(
+        theme.colors[`Weather.${name}.HeaderEnd`],
+      );
+      await wrapper.setProps({ conditionCode: 61, isDay: true });
+      expect(card.style.getPropertyValue('--card-background')).toBe(
+        theme.colors['Weather.Rain.Forecast'],
+      );
+    } finally {
+      wrapper.unmount();
+    }
+  },
+);

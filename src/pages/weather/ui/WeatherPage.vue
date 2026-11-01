@@ -216,6 +216,14 @@ watch(
           v-if="cell.kind === 'map'"
           :layer="cell.layer"
           :timestamp="cell.timestamp"
+          :condition-code="
+            cell.timestamp === undefined && state.status === 'ready'
+              ? state.weather.conditionCode
+              : forecast.day(cell.date)?.conditionCode
+          "
+          :is-day="
+            cell.timestamp === undefined && state.status === 'ready' ? state.weather.isDay : true
+          "
           :time-zone="state.status === 'ready' ? state.weather.timeZone : 'UTC'"
           :location="mapLocation"
           :city="state.status === 'ready' ? state.weather.city : ''"

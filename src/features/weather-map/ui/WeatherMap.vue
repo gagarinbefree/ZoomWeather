@@ -4,7 +4,8 @@ import type { WeatherMapLayer } from '@/entities/weather';
 import { isWindyForecastAvailable } from '@/shared/weather/windy-forecast-time';
 import { windyConfig } from '@/shared/config/windy';
 import { messages, type Locale } from '@/shared/locales';
-import { sunnyThemeStyle } from '@/shared/themes';
+import { baseThemeStyle } from '@/shared/themes';
+import { weatherPresentation } from '@/shared/weather';
 import { LoadingIndicator } from '@/shared/ui/loading-indicator';
 import { createWindyUrl, type MapLocation } from '@/features/weather-map/model/create-windy-url';
 
@@ -15,13 +16,19 @@ const props = withDefaults(
     readonly city: string;
     readonly locale: Locale;
     readonly active: boolean;
+    readonly conditionCode?: number | undefined;
+    readonly isDay?: boolean;
     readonly timestamp?: number | undefined;
     readonly timeZone?: string;
     readonly online?: boolean;
   }>(),
-  { online: true, timeZone: 'UTC', timestamp: undefined },
+  { online: true, timeZone: 'UTC', timestamp: undefined, conditionCode: Number.NaN, isDay: true },
 );
 const text = computed(() => messages[props.locale]);
+const mapStyle = computed(() => ({
+  ...baseThemeStyle,
+  ...weatherPresentation(props.conditionCode, props.isDay).style,
+}));
 const title = computed(() => text.value.mapLayers[props.layer]);
 const loaded = shallowRef(false);
 const failed = shallowRef(false);
@@ -98,7 +105,7 @@ onBeforeUnmount(stopTimer);
 </script>
 
 <template>
-  <article class="weather-map" :style="sunnyThemeStyle" :aria-label="title">
+  <article class="weather-map" :style="mapStyle" :aria-label="title">
     <header class="weather-map__header" data-map-swipe-area>
       <h2>{{ title }}</h2>
       <p>{{ city }}</p>

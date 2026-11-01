@@ -1,6 +1,34 @@
-import { expect, test, type Page } from '@/tests/shared/lib/browser-test';
+import { expect, test, type Page, type Locator } from '@/tests/shared/lib/browser-test';
 import { currentResponse } from '@/tests/entities/weather/api/current-fixture';
 import { forecastResponse } from '@/tests/entities/weather/api/forecast-fixture';
+
+const mapForecastResponse = {
+  forecast: {
+    forecastday: forecastResponse.forecast.forecastday.map((day, index) =>
+      index === 1
+        ? { ...day, day: { ...day.day, condition: { code: 1183, text: 'Light rain' } } }
+        : day,
+    ),
+  },
+};
+
+/**
+ * cardColors. Read the displayed body color and header gradient for a weather or map card.
+ * @param card The card being compared with another card in its row.
+ * @returns The colors actually painted by the browser.
+ */
+async function cardColors(
+  card: Locator,
+): Promise<{ readonly background: string; readonly header: string }> {
+  return card.evaluate((element) => {
+    const header = element.querySelector('header');
+    if (!header) throw new Error('Missing card header');
+    return {
+      background: getComputedStyle(element).backgroundColor,
+      header: getComputedStyle(header).backgroundImage,
+    };
+  });
+}
 
 test.use({
   serviceWorkers: 'block',
@@ -21,7 +49,7 @@ test.beforeEach(async ({ page }) => {
   );
   await page.route(
     'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
-    (route) => route.fulfill({ json: forecastResponse }),
+    (route) => route.fulfill({ json: mapForecastResponse }),
   );
 });
 
@@ -77,6 +105,7 @@ test('opens temperature wind and pressure to the left and returns vertically to 
   await expect(viewport).toHaveAttribute('data-column', '3');
   await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
   await expect(viewport).toHaveAttribute('data-grid-rows', '3');
+  const currentColors = await cardColors(page.locator('[data-tikitaki-role="current"] article'));
   expect(requests).toHaveLength(0);
   for (const [layer, title] of [
     ['temp', 'Карта температуры'],
@@ -86,6 +115,7 @@ test('opens temperature wind and pressure to the left and returns vertically to 
     await swipeRight(page);
     const card = page.getByRole('article', { name: title });
     await expect(card).toBeVisible();
+    expect(await cardColors(card)).toEqual(currentColors);
     await expect(card.locator('time')).toHaveAttribute('datetime', '2026-10-26T05:37:00.000Z');
     await expect(card.locator('time')).toContainText('10:37');
     await expect(card.locator('header button')).toHaveCount(0);
@@ -116,10 +146,13 @@ test('opens temperature wind and pressure to the left and returns vertically to 
   await expect(viewport).toHaveAttribute('data-column', '3');
   await expect(page.getByRole('article', { name: 'Прогноз на день' })).toContainText('Завтра');
   await expect(page.locator('iframe')).toHaveCount(0);
+  const dailyColors = await cardColors(page.locator('[data-tikitaki-role="current"] article'));
+  expect(dailyColors).not.toEqual(currentColors);
   await viewport.press('ArrowLeft');
   await expect(viewport).toHaveAttribute('data-row', '1');
   await expect(viewport).toHaveAttribute('data-column', '2');
   const tomorrowMap = page.locator('[data-tikitaki-role="current"] .weather-map');
+  expect(await cardColors(tomorrowMap)).toEqual(dailyColors);
   await expect(tomorrowMap.locator('time')).toHaveAttribute('datetime', '2026-10-27T07:00:00.000Z');
   await expect(tomorrowMap.locator('time')).toContainText('12:00');
   await expect(tomorrowMap.locator('iframe')).toHaveAttribute('src', /calendar=in/);
