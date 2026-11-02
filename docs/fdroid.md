@@ -7,7 +7,7 @@ Use OpenJDK 21, Android SDK platform 36, build tools 36.0.0 and the Node version
 ```sh
 npm ci
 npm run android:sync:fdroid
-./android/gradlew -p android :app:testDebugUnitTest :app:assembleRelease -Pfdroid=true -PappVersionCode=57 -PappVersionName=0.1.57
+./android/gradlew -p android :app:testDebugUnitTest :app:assembleRelease -Pfdroid=true -PappVersionCode=58 -PappVersionName=0.1.58
 ```
 
 On Windows use `android\gradlew.bat` and quote the Gradle property arguments. The resulting candidate is `android/app/build/outputs/apk/release/app-release-unsigned.apk`. F-Droid signs its builds. This unsigned candidate is not an installable store release.
@@ -28,7 +28,7 @@ Localized store descriptions live in `fastlane/metadata/android`. Run `npm run m
 
 ## Publication status
 
-The app has not been submitted to or published on F-Droid. The native candidate and its dependency guard were tested locally; the full fdroidserver source and binary scans still require a Linux packaging environment. The application license is awaiting the author's selection. The recipe is intentionally disabled until that choice and the candidate release are verified. The font and icon licenses already live in `shared/assets/fonts/LICENSE.txt` and `shared/assets/icons/LICENSE`; they retain their own terms. The author must also have the right to redistribute the supplied background drawings and app artwork.
+The app has not been submitted to or published on F-Droid. The native candidate and its dependency guard were tested locally; the full fdroidserver source and binary scans still require a Linux packaging environment. The application is licensed under MIT in the root `LICENSE` file. The recipe is intentionally disabled until the F-Droid packaging review is complete. The font and icon licenses already live in `shared/assets/fonts/LICENSE.txt` and `shared/assets/icons/LICENSE`; they retain their own terms. The author must also have the right to redistribute the supplied background drawings and app artwork.
 
 Once these checks are satisfied, select a release tag that includes the approved license, resolve it to a full commit hash, update the recipe version, remove `Disabled`, set the approved SPDX license and open a GitLab merge request using `fdroid/submission.md`. A GitLab login is needed for that final step. The maintainers decide acceptance and may require recipe adjustments or additional evidence of actual use for this young project.
 

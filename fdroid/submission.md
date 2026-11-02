@@ -1,6 +1,6 @@
 # ZoomWeather submission draft
 
-This request is not submitted. Do not submit it until the application license is selected, the matching release tag exists, and the candidate has passed the native build and dependency audit.
+This request is not submitted. The application is licensed under MIT. Before submission, verify the matching release commit and complete the F-Droid source and binary scanner review.
 
 ## Application
 
@@ -10,7 +10,7 @@ This request is not submitted. Do not submit it until the application license is
 - Website: https://gagarinbefree.github.io/ZoomWeather/
 - Build recipe: fdroid/com.gagarinbefree.tikweather.yml
 - Store metadata: fastlane/metadata/android
-- Application license: awaiting the upstream author's choice
+- Application license: MIT
 
 ## Description for reviewers
 

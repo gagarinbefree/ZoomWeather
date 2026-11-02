@@ -49,6 +49,10 @@ The interface is available in English and Russian. It is comfortable to use on a
 
 ZoomWeather is built using [TikiTaki](https://github.com/gagarinbefree/TikiTaki), the library behind its swipe navigation.
 
+### License
+
+ZoomWeather is available under the [MIT license](LICENSE). Third party fonts, icons and libraries retain their own licenses.
+
 ## Русский
 
 **Погода без лишнего.** Откройте сайт и сразу узнайте, какая погода сейчас, что ждёт вас в ближайшие часы и в следующие дни. Без регистрации и долгих настроек.
@@ -88,3 +92,7 @@ ZoomWeather попросит разрешение определить ваше 
 ### Сделано с TikiTaki
 
 ZoomWeather разработано с использованием [TikiTaki](https://github.com/gagarinbefree/TikiTaki), библиотеки навигации свайпами.
+
+### Лицензия
+
+ZoomWeather доступен по [лицензии MIT](LICENSE). Сторонние шрифты, иконки и библиотеки сохраняют собственные лицензии.

@@ -5,6 +5,7 @@ import process from 'node:process';
 const root = process.argv[2];
 if (!root) throw new Error('Specify the completed distribution directory');
 const notices = {
+  'ZoomWeather-MIT.txt': 'LICENSE',
   'Inter-OFL.txt': 'shared/assets/fonts/LICENSE.txt',
   'Fluent-Icons-MIT.txt': 'shared/assets/icons/LICENSE',
   'TikiTaki-MIT.txt': 'node_modules/tikitaki/LICENSE',

@@ -1,0 +1,1 @@
+Released the application source under the MIT license. The F-Droid candidate includes the application license and preserves upstream notices for fonts, icons and libraries.
