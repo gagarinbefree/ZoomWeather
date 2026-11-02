@@ -47,10 +47,10 @@ for (const direction of ['left', 'right', 'up', 'down'] as const satisfies reado
     await page.goto('./src/tests/app/ui/fixtures/index.html');
     const viewport = page.locator('.weather-viewport');
     await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
-    await expect(viewport).toHaveAttribute('data-grid-rows', '3');
+    await expect(viewport).toHaveAttribute('data-grid-rows', '5');
     await viewport.focus();
     await viewport.press('ArrowDown');
-    await expect(viewport).toHaveAttribute('data-row', '1');
+    await expect(viewport).toHaveAttribute('data-row', '3');
     await expect.poll(() => Boolean(releaseUpdate)).toBe(true);
     releaseUpdate?.();
     const dialog = page.getByRole('dialog');
@@ -71,7 +71,7 @@ for (const direction of ['left', 'right', 'up', 'down'] as const satisfies reado
     await expect(dialog.locator('[data-action="update"]')).toBeFocused();
     await swipe(page, direction);
     await expect(dialog).toHaveCount(0);
-    await expect(viewport).toHaveAttribute('data-row', '0');
+    await expect(viewport).toHaveAttribute('data-row', '2');
     await expect(viewport).toHaveAttribute('data-column', '3');
     await expect(viewport).toBeFocused();
     await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();

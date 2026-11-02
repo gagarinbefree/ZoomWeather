@@ -19,6 +19,8 @@ export interface ForecastHour {
 }
 
 export interface ForecastDay {
+  /** Historical precipitation amount in millimeters when available. */
+  readonly precipitation?: number;
   readonly provider?: WeatherProvider;
   readonly serverCachedAt?: number;
   readonly date: string;

@@ -60,6 +60,7 @@ function findCellPosition(
  * @param canRefresh Whether the page can start a new weather request.
  * @param primaryColumn The shared daily anchor column for vertical navigation.
  * @param rowStartColumn The logical column where each forecast row begins.
+ * @param primaryRow The main current weather row below any history.
  * @returns Reactive cell hosts and navigation state owned by the current Vue component.
  */
 export function useWeatherSwipe(
@@ -71,6 +72,7 @@ export function useWeatherSwipe(
   canRefresh: () => boolean = () => true,
   primaryColumn = 0,
   rowStartColumn: (row: number) => number = () => 0,
+  primaryRow = 0,
 ): WeatherSwipeView {
   const bridge = createVueCellAdapter<WeatherCell>();
   const controller = shallowRef<SwipeEngine<WeatherCell> | null>(null);
@@ -184,8 +186,7 @@ export function useWeatherSwipe(
       controller.value = createSwipeEngine({
         container: container.value,
         grid: readGrid(),
-        initialPosition: { row: 0, col: primaryColumn },
-        navigation: { primaryColumn, rowStartColumn },
+        navigation: { primaryRow, primaryColumn, rowStartColumn },
         adapter: bridge.adapter,
         onPositionChange: publishPosition,
         onError: reportError,
@@ -193,11 +194,14 @@ export function useWeatherSwipe(
           ? {
               edgeAction: {
                 direction: 'down' as const,
+                returnToPrimary: true,
                 ...weatherRefreshOptions,
                 enabled: (selected: Position): boolean =>
                   selected.row === 0 &&
                   selected.col === primaryColumn &&
-                  readGrid()[0]?.[primaryColumn]?.kind === 'current' &&
+                  ['current', 'history'].includes(
+                    readGrid()[0]?.[primaryColumn - rowStartColumn(0)]?.kind ?? '',
+                  ) &&
                   canRefresh(),
                 onTrigger: ({ signal }: EdgeActionContext): Promise<void> => refreshWeather(signal),
                 onStateChange: (state: EdgeActionState): void => {

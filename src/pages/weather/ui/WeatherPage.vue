@@ -5,6 +5,8 @@ import { computed, inject, nextTick, onBeforeUnmount, onMounted, shallowRef, wat
 import {
   CurrentWeatherCard,
   addWeatherMaps,
+  addWeatherHistory,
+  weatherPrimaryRow,
   weatherPrimaryColumn,
   weatherRowStartColumn,
   readWeatherSnapshot,
@@ -14,6 +16,7 @@ import {
 } from '@/entities/weather';
 import { currentWeatherServicesKey, useCurrentWeatherStore } from '@/features/current-weather';
 import { ForecastCell, forecastServicesKey, useForecastStore } from '@/features/forecast';
+import { HistoryCell, historyServicesKey, useHistoryStore } from '@/features/history';
 import { WeatherMap } from '@/features/weather-map';
 import { messages } from '@/shared/locales';
 import { LoadingIndicator } from '@/shared/ui/loading-indicator';
@@ -27,6 +30,8 @@ const props = withDefaults(defineProps<{ readonly navigationReset?: number }>(),
 const { grid } = storeToRefs(useWeatherGridStore());
 const weather = useCurrentWeatherStore();
 const forecast = useForecastStore();
+const history = useHistoryStore();
+const historyServices = inject(historyServicesKey, null);
 const services = inject(currentWeatherServicesKey, null);
 const forecastServices = inject(forecastServicesKey, null);
 const { state, locale } = storeToRefs(weather);
@@ -34,10 +39,12 @@ const text = computed(() => messages[locale.value]);
 const online = shallowRef(navigator.onLine);
 const mapNow = shallowRef(Date.now());
 const mapGrid = computed(() =>
-  addWeatherMaps(grid.value, {
-    now: mapNow.value,
-    timeZone: state.value.status === 'ready' ? state.value.weather.timeZone : 'UTC',
-  }),
+  addWeatherHistory(
+    addWeatherMaps(grid.value, {
+      now: mapNow.value,
+      timeZone: state.value.status === 'ready' ? state.value.weather.timeZone : 'UTC',
+    }),
+  ),
 );
 let mapClock: ReturnType<typeof setInterval> | undefined;
 
@@ -75,6 +82,7 @@ function saveSnapshot(forecastDays = forecast.days): void {
     locale: weather.locale,
     weather: current.weather,
     forecast: { days: forecastDays },
+    history: history.days,
   };
   writeWeatherSnapshot(snapshot);
 }
@@ -106,8 +114,25 @@ async function reloadWeather(signal?: AbortSignal): Promise<void> {
       },
       forecastServices,
     );
+  const today = grid.value[0]?.[0]?.date;
+  const historyLoad =
+    historyServices && today
+      ? history.load(
+          {
+            today,
+            city: current.weather.city,
+            country: current.weather.country,
+            location: current.location,
+            timeZone: current.weather.timeZone,
+            locale: weather.locale,
+          },
+          historyServices,
+          signal,
+        )
+      : Promise.resolve();
   saveSnapshot([]);
   await nextTick();
+  if (signal) await historyLoad;
 }
 
 /**
@@ -133,7 +158,7 @@ function dayIndex(date: string): number {
  * @param position The selected grid row and column.
  */
 function onPositionChange(position: Position): void {
-  forecast.focus(position.row);
+  if (position.row >= weatherPrimaryRow) forecast.focus(position.row - weatherPrimaryRow);
 }
 /**
  * start. Show saved weather and start loading fresh data
@@ -143,6 +168,7 @@ function start(): void {
   if (snapshot) {
     try {
       weather.restore(snapshot);
+      history.restore(snapshot.history ?? [], snapshot.weather, snapshot.savedAt);
       forecast.restore(
         snapshot.forecast,
         weather.state.status === 'ready' ? weather.state.now : Date.now(),
@@ -182,11 +208,18 @@ onBeforeUnmount(() => {
   loadRevision++;
   weather.cancel();
   forecast.cancel();
+  history.cancel();
 });
 watch(
   () => forecast.days,
   (days) => {
     saveSnapshot(days);
+  },
+);
+watch(
+  () => history.days,
+  () => {
+    saveSnapshot();
   },
 );
 watch(
@@ -205,6 +238,7 @@ watch(
       :key="props.navigationReset"
       :grid="mapGrid"
       :primary-column="weatherPrimaryColumn"
+      :primary-row="weatherPrimaryRow"
       :row-start-column="mapRowStart"
       :locale="locale"
       :refresh="reloadWeather"
@@ -230,6 +264,13 @@ watch(
           :locale="locale"
           :active="active"
           :online="online"
+        />
+        <HistoryCell
+          v-else-if="cell.kind === 'history' && state.status === 'ready'"
+          :cell="cell"
+          :city="state.weather.city"
+          :time-zone="state.weather.timeZone"
+          :locale="locale"
         />
         <CurrentWeatherCard
           v-else-if="cell.kind === 'current' && state.status === 'ready'"

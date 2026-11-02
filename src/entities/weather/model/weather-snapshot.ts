@@ -11,6 +11,7 @@ export interface WeatherSnapshot {
   readonly locale: Locale;
   readonly weather: CurrentWeather;
   readonly forecast: Forecast;
+  readonly history?: readonly ForecastDay[];
 }
 
 /**
@@ -91,6 +92,8 @@ function isDay(value: unknown): value is ForecastDay {
     isNumber(value['minimum']) &&
     isNumber(value['humidity']) &&
     isNumber(value['windSpeed']) &&
+    (value['precipitation'] === undefined ||
+      (isNumber(value['precipitation']) && value['precipitation'] >= 0)) &&
     (value['rainChance'] === null || isNumber(value['rainChance'])) &&
     (value['uv'] === null || isNumber(value['uv'])) &&
     (value['sunrise'] == null || typeof value['sunrise'] === 'string') &&
@@ -149,7 +152,11 @@ function isSnapshot(value: unknown): value is WeatherSnapshot {
       forecast['intervalHours'] === 2 ||
       forecast['intervalHours'] === 3) &&
     Array.isArray(forecast['days']) &&
-    forecast['days'].every(isDay)
+    forecast['days'].every(isDay) &&
+    (value['history'] === undefined ||
+      (Array.isArray(value['history']) &&
+        value['history'].length <= 2 &&
+        value['history'].every((day) => isDay(day) && day.hours.length === 0)))
   );
 }
 

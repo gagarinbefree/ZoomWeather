@@ -44,7 +44,10 @@ export async function verifyApplicationShell(page: Page): Promise<void> {
   await expect(page.getByRole('status')).toHaveAccessibleName('Загружаем погоду...');
   await expect(page.getByRole('status')).toBeVisible();
   await expect(page.getByRole('main')).toBeVisible();
-  await expect(page.locator('.spinner-border')).toHaveCSS('animation-name', 'spinner-border');
+  await expect(page.locator('[data-tikitaki-role="current"] .spinner-border')).toHaveCSS(
+    'animation-name',
+    'spinner-border',
+  );
   expect(errors).toEqual([]);
 }
 

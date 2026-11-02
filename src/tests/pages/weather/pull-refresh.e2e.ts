@@ -1,8 +1,13 @@
 import { expect, test, type Page } from '@/tests/shared/lib/browser-test';
 import { currentResponse } from '@/tests/entities/weather/api/current-fixture';
 import { forecastResponse } from '@/tests/entities/weather/api/forecast-fixture';
+import { historyFixture } from '@/tests/entities/weather/api/history-fixture';
 
-test.use({ permissions: ['geolocation'], geolocation: { latitude: 58, longitude: 56.25 } });
+test.use({
+  serviceWorkers: 'block',
+  permissions: ['geolocation'],
+  geolocation: { latitude: 58, longitude: 56.25 },
+});
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-10-26T05:37:00Z'));
@@ -12,6 +17,15 @@ test.beforeEach(async ({ page }) => {
   );
   await page.route('https://gagarinbefree.clodocd.com/api/openweathermap/**', (route) =>
     route.fulfill({ status: 503, json: {} }),
+  );
+  await page.route(
+    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
+    (route) => route.fulfill({ json: forecastResponse }),
+  );
+  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**', (route) =>
+    route.fulfill({
+      json: historyFixture(new URL(route.request().url()).searchParams.get('start_date') ?? ''),
+    }),
   );
 });
 
@@ -52,30 +66,40 @@ async function pullDown(page: Page, distance = 200): Promise<void> {
   }
 }
 
+/**
+ * openYearAgo. Move through yesterday to the upper historical boundary.
+ * @param page The weather application page.
+ * @returns A promise that settles when the anniversary card is selected.
+ */
+async function openYearAgo(page: Page): Promise<void> {
+  const viewport = page.locator('.weather-viewport');
+  await viewport.focus();
+  await viewport.press('ArrowUp');
+  await expect(page.getByRole('article', { name: 'Вчера', exact: true })).toBeVisible();
+  await viewport.press('ArrowUp');
+  await expect(page.getByRole('article', { name: 'Год назад', exact: true })).toBeVisible();
+  await expect(viewport).toHaveAttribute('data-row', '0');
+}
+
 for (const installed of [false, true]) {
-  test(`refreshes A4 while keeping the card visible in ${installed ? 'installed PWA' : 'website'}`, async ({
+  test(`refreshes from year ago and returns to current weather in ${installed ? 'PWA' : 'website'}`, async ({
     page,
-  }, info) => {
+  }) => {
     if (installed)
-      await page.addInitScript(() => {
-        Object.defineProperty(navigator, 'standalone', { configurable: true, value: true });
-      });
-    let currentRequests = 0;
-    let forecastRequests = 0;
-    let delayForecast = false;
-    let finishCurrent: (() => void) | undefined;
-    let finishForecast: (() => void) | undefined;
-    const currentGate = new Promise<void>((resolve) => {
-      finishCurrent = resolve;
-    });
-    const forecastGate = new Promise<void>((resolve) => {
-      finishForecast = resolve;
+      await page.addInitScript(() =>
+        Object.defineProperty(navigator, 'standalone', { configurable: true, value: true }),
+      );
+    let requests = 0;
+    let historyRequests = 0;
+    let finish: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      finish = resolve;
     });
     await page.route(
       'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
       async (route) => {
-        const attempt = ++currentRequests;
-        if (attempt > 1) await currentGate;
+        const attempt = ++requests;
+        if (attempt > 1) await gate;
         await route.fulfill({
           json: {
             ...currentResponse,
@@ -85,54 +109,49 @@ for (const installed of [false, true]) {
       },
     );
     await page.route(
-      'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
+      'https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**',
       async (route) => {
-        forecastRequests++;
-        if (delayForecast) await forecastGate;
-        await route.fulfill({ json: forecastResponse });
+        historyRequests++;
+        await route.fulfill({
+          json: historyFixture(new URL(route.request().url()).searchParams.get('start_date') ?? ''),
+        });
       },
     );
     await page.goto('./');
-    const card = page.getByRole('article', { name: 'Текущая погода' });
     const viewport = page.locator('.weather-viewport');
-    await expect(card).toContainText('8,9°C');
-    await expect(viewport).toHaveAttribute('data-grid-rows', '3');
-    const initialForecasts = forecastRequests;
-    delayForecast = true;
+    const current = page.getByRole('article', { name: 'Текущая погода' });
+    await expect(current).toContainText('8,9°C');
+    await expect(viewport).toHaveAttribute('data-row', '2');
+    await expect(viewport).toHaveAttribute('data-grid-rows', '5');
+    await openYearAgo(page);
+    await page.screenshot({ path: test.info().outputPath('year-ago.png') });
+    await viewport.press('ArrowLeft');
+    await viewport.press('ArrowRight');
+    await expect(viewport).toHaveAttribute('data-column', '3');
+    await expect(page.locator('iframe')).toHaveCount(0);
+    expect(requests).toBe(1);
+    expect(historyRequests).toBe(2);
     await pullDown(page);
     await expect(viewport).toHaveAttribute('data-refresh-phase', 'loading');
-    await expect.poll(() => currentRequests).toBe(2);
-    await expect(card).toContainText('8,9°C');
-    const indicator = page.locator('[data-refresh-indicator]');
-    await expect(indicator.locator('.spinner-border')).toBeVisible();
-    await expect(viewport.locator('[data-tikitaki-role="current"]')).toHaveCSS(
-      'transform',
-      'matrix(1, 0, 0, 1, 0, 80)',
-    );
-    await page.screenshot({
-      path: `.cache/pull-refresh-${info.project.name}-${installed ? 'pwa' : 'site'}.png`,
-    });
+    await expect.poll(() => requests).toBe(2);
+    await expect(page.getByRole('article', { name: 'Год назад', exact: true })).toBeVisible();
+    await expect(page.locator('[data-refresh-indicator] .spinner-border')).toBeVisible();
     await pullDown(page);
-    expect(currentRequests).toBe(2);
-    finishCurrent?.();
-    await expect(indicator).toBeHidden();
-    await expect(card).toContainText('12,3°C');
-    await expect(viewport).toHaveAttribute('data-row', '0');
+    expect(requests).toBe(2);
+    finish?.();
+    await expect(page.locator('[data-refresh-indicator]')).toBeHidden();
+    await expect(viewport).toHaveAttribute('data-row', '2');
     await expect(viewport).toHaveAttribute('data-column', '3');
-    await expect(viewport.locator('[data-tikitaki-role="current"]')).toHaveCSS(
-      'transform',
-      'matrix(1, 0, 0, 1, 0, 0)',
-    );
-    await expect.poll(() => forecastRequests).toBeGreaterThan(initialForecasts);
+    await expect(current).toContainText('12,3°C');
+    expect(historyRequests).toBe(4);
     await expect(page.getByRole('alert')).toHaveCount(0);
-    finishForecast?.();
-    await expect(viewport).toHaveAttribute('data-grid-rows', '3');
   });
 }
 
-test('silently returns to the previous weather when every provider fails', async ({ page }) => {
+test('returns silently to the last successful current card after failed refresh', async ({
+  page,
+}) => {
   let requests = 0;
-  let forecasts = 0;
   await page.route(
     'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
     async (route) => {
@@ -140,32 +159,19 @@ test('silently returns to the previous weather when every provider fails', async
       await route.fulfill(requests === 1 ? { json: currentResponse } : { status: 503, json: {} });
     },
   );
-  await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
-    async (route) => {
-      forecasts++;
-      await route.fulfill({ json: forecastResponse });
-    },
-  );
   await page.goto('./');
-  const card = page.getByRole('article', { name: 'Текущая погода' });
-  await expect(card).toContainText('8,9°C');
-  const viewport = page.locator('.weather-viewport');
-  await expect(viewport).toHaveAttribute('data-grid-rows', '3');
-  const initialForecasts = forecasts;
+  await expect(page.getByRole('article', { name: 'Текущая погода' })).toContainText('8,9°C');
+  await openYearAgo(page);
   await pullDown(page);
   await expect.poll(() => requests).toBe(2);
-  await expect(page.locator('[data-refresh-indicator]')).toBeHidden();
-  await expect(card).toContainText('8,9°C');
+  await expect(page.locator('.weather-viewport')).toHaveAttribute('data-row', '2');
+  await expect(page.getByRole('article', { name: 'Текущая погода' })).toContainText('8,9°C');
   await expect(page.getByRole('alert')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Повторить' })).toHaveCount(0);
-  expect(forecasts).toBe(initialForecasts);
-  await viewport.focus();
-  await viewport.press('ArrowRight');
-  await expect(viewport).toHaveAttribute('data-column', '4');
 });
 
-test('does not refresh after a short pull or from an hourly card', async ({ page }) => {
+test('moves from current weather to history without refreshing and ignores a short boundary pull', async ({
+  page,
+}) => {
   let requests = 0;
   await page.route(
     'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
@@ -174,58 +180,17 @@ test('does not refresh after a short pull or from an hourly card', async ({ page
       await route.fulfill({ json: currentResponse });
     },
   );
-  await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
-    (route) => route.fulfill({ json: forecastResponse }),
-  );
   await page.goto('./');
   const viewport = page.locator('.weather-viewport');
   await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
-  await expect(viewport).toHaveAttribute('data-grid-rows', '3');
+  await pullDown(page);
+  await expect(viewport).toHaveAttribute('data-row', '1');
+  await expect(page.getByRole('article', { name: 'Вчера', exact: true })).toBeVisible();
+  expect(requests).toBe(1);
+  await pullDown(page);
+  await expect(viewport).toHaveAttribute('data-row', '0');
   await pullDown(page, 30);
   await expect(page.locator('[data-refresh-indicator]')).toBeHidden();
+  await expect(viewport).toHaveAttribute('data-row', '0');
   expect(requests).toBe(1);
-  await viewport.focus();
-  await viewport.press('ArrowRight');
-  await expect(viewport).toHaveAttribute('data-column', '4');
-  await pullDown(page);
-  await expect(viewport).toHaveAttribute('data-column', '4');
-  await expect(page.locator('[data-refresh-indicator]')).toBeHidden();
-  expect(requests).toBe(1);
-});
-
-test('continues loading the previous forecast after a failed current refresh', async ({ page }) => {
-  let requests = 0;
-  let finishForecast: (() => void) | undefined;
-  const forecastGate = new Promise<void>((resolve) => {
-    finishForecast = resolve;
-  });
-  await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
-    async (route) => {
-      requests++;
-      await route.fulfill(requests === 1 ? { json: currentResponse } : { status: 503, json: {} });
-    },
-  );
-  await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
-    async (route) => {
-      await forecastGate;
-      await route.fulfill({ json: forecastResponse });
-    },
-  );
-  await page.goto('./');
-  const viewport = page.locator('.weather-viewport');
-  const card = page.getByRole('article', { name: 'Текущая погода' });
-  await expect(card).toContainText('8,9°C');
-  await expect(viewport).toHaveAttribute('data-grid-rows', '16');
-  await pullDown(page);
-  await expect.poll(() => requests).toBe(2);
-  await expect(page.locator('[data-refresh-indicator]')).toBeHidden();
-  await expect(card).toContainText('8,9°C');
-  finishForecast?.();
-  await expect(viewport).toHaveAttribute('data-grid-rows', '3');
-  await viewport.focus();
-  await viewport.press('ArrowDown');
-  await expect(page.getByRole('article', { name: 'Прогноз на день' })).toContainText('Завтра');
 });

@@ -1,5 +1,9 @@
 export const messages = {
   ru: {
+    yesterday: 'Вчера',
+    yearAgo: 'Год назад',
+    precipitation: 'Осадки',
+    millimeters: 'мм',
     mapLayers: { temp: 'Карта температуры', wind: 'Карта ветра', pressure: 'Карта давления' },
     mapForecastUnavailable: 'Карта для этой даты недоступна',
     mapLoading: 'Загружаем карту...',
@@ -90,6 +94,10 @@ export const messages = {
     incompleteForecastCalendar: 'Не удалось построить дни прогноза',
   },
   en: {
+    yesterday: 'Yesterday',
+    yearAgo: 'A year ago',
+    precipitation: 'Precipitation',
+    millimeters: 'mm',
     mapLayers: { temp: 'Temperature map', wind: 'Wind map', pressure: 'Pressure map' },
     mapForecastUnavailable: 'No map is available for this date',
     mapLoading: 'Loading map...',

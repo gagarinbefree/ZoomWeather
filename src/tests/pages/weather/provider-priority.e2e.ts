@@ -109,7 +109,7 @@ test('uses Open Meteo for current daily and hourly weather while healthy backups
   );
   const viewport = page.locator('.weather-viewport');
   await expect.poll(() => requestedDays).toContain(16);
-  await expect(viewport).toHaveAttribute('data-grid-rows', '16');
+  await expect(viewport).toHaveAttribute('data-grid-rows', '18');
   await expect(viewport.locator('.forecast-weather-card').first()).toBeAttached();
   await viewport.focus();
   await viewport.press('ArrowRight');

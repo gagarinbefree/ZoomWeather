@@ -118,3 +118,41 @@ describe('ForecastWeatherCard', () => {
     wrapper.unmount();
   });
 });
+
+it.each([
+  ['ru', 'Год назад', 'Осадки', '2,3 мм'],
+  ['en', 'A year ago', 'Precipitation', '2.3 mm'],
+] as const)(
+  'shows historical facts with the shared daily layout in %s',
+  async (locale, heading, rain, amount) => {
+    const forecast = await getForecast({
+      location: { source: 'automatic' },
+      locale,
+      timeZone: 'Asia/Yekaterinburg',
+      days: 3,
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(Response.json(forecastResponse)),
+    });
+    const day = forecast.days[0];
+    if (!day) throw new Error('Missing fixture day');
+    const wrapper = mount(ForecastWeatherCard, {
+      props: {
+        forecast: { ...day, date: '2025-10-26', precipitation: 2.3, rainChance: null, hours: [] },
+        kind: 'daily',
+        dayIndex: -1,
+        city: 'Perm',
+        timeZone: 'Asia/Yekaterinburg',
+        locale,
+        heading,
+      },
+    });
+    expect(wrapper.get('h2').text()).toBe(heading);
+    expect(wrapper.get('article').attributes('aria-label')).toBe(heading);
+    expect(wrapper.text()).toContain(rain);
+    expect(wrapper.text()).toContain(amount);
+    expect(wrapper.get('.forecast-weather-card__date time').attributes('datetime')).toBe(
+      '2025-10-26',
+    );
+    expect(wrapper.findAll('dd')).toHaveLength(6);
+    expect(wrapper.get('.forecast-weather-card__date time').text()).toContain('2025');
+  },
+);

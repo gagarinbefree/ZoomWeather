@@ -39,6 +39,12 @@ export interface WeatherMapCell extends WeatherCellIdentity {
   readonly layer: WeatherMapLayer;
   readonly timestamp?: number;
 }
+export interface HistoryWeatherCell extends WeatherCellIdentity {
+  readonly kind: 'history';
+  readonly timestamp?: never;
+  readonly period: 'yesterday' | 'yearAgo';
+}
+
 export type WeatherCell =
-  CurrentWeatherCell | DailyWeatherCell | HourlyWeatherCell | WeatherMapCell;
+  CurrentWeatherCell | DailyWeatherCell | HourlyWeatherCell | WeatherMapCell | HistoryWeatherCell;
 export type WeatherGrid = Grid<WeatherCell>;

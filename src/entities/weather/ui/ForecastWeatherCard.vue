@@ -15,6 +15,7 @@ import WeatherCacheStatus from './WeatherCacheStatus.vue';
 const props = defineProps<{
   readonly forecast: ForecastDay | ForecastHour;
   readonly kind: 'daily' | 'hourly';
+  readonly heading?: string;
   readonly dayIndex: number;
   readonly city: string;
   readonly timeZone: string;
@@ -41,6 +42,7 @@ const condition = computed(() =>
 );
 const dayDate = computed(() => new Date(`${daily.value?.date ?? '1970-01-01'}T12:00:00Z`));
 const title = computed(() => {
+  if (props.heading) return props.heading;
   if (hourly.value)
     return new Intl.DateTimeFormat(props.locale, {
       timeZone: props.timeZone,
@@ -64,12 +66,13 @@ const dateLabel = computed(() => {
       day: 'numeric',
       month: 'short',
     }).format(hourly.value.timestamp);
-  if (props.dayIndex === 1)
+  if (props.dayIndex === 1 || props.heading)
     return new Intl.DateTimeFormat(props.locale, {
       timeZone: 'UTC',
       weekday: 'long',
       day: 'numeric',
       month: 'short',
+      ...(props.heading ? { year: 'numeric' as const } : {}),
     }).format(dayDate.value);
   return new Intl.DateTimeFormat(props.locale, {
     timeZone: 'UTC',
@@ -93,9 +96,13 @@ const measurements = computed(() => {
         icon: windIcon,
       },
       {
-        name: text.value.rainChance,
+        name: day.precipitation === undefined ? text.value.rainChance : text.value.precipitation,
         value:
-          day.rainChance === null ? text.value.noData : `${number.value.format(day.rainChance)}%`,
+          day.precipitation !== undefined
+            ? `${number.value.format(day.precipitation)} ${text.value.millimeters}`
+            : day.rainChance === null
+              ? text.value.noData
+              : `${number.value.format(day.rainChance)}%`,
         icon: rainIcon,
       },
       {
@@ -159,7 +166,7 @@ const measurements = computed(() => {
   <article
     class="forecast-weather-card"
     :style="presentation.style"
-    :aria-label="kind === 'daily' ? text.dailyForecast : text.hourlyForecast"
+    :aria-label="heading ?? (kind === 'daily' ? text.dailyForecast : text.hourlyForecast)"
   >
     <header class="forecast-weather-card__header">
       <h2>{{ title }}</h2>

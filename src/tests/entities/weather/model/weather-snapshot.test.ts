@@ -88,3 +88,15 @@ describe('saved provider metadata', () => {
     expect(readWeatherSnapshot()).toBeNull();
   });
 });
+
+it('retains both historical summaries without hourly data in the saved weather snapshot', async () => {
+  const value = await snapshot();
+  const original = value.forecast.days[0];
+  if (!original) throw new Error('Missing daily fixture');
+  const history = [
+    { ...original, date: '2026-10-25', hours: [], precipitation: 2.3, rainChance: null },
+    { ...original, date: '2025-10-26', hours: [], precipitation: 1, rainChance: null },
+  ];
+  writeWeatherSnapshot({ ...value, history });
+  expect(readWeatherSnapshot()?.history).toEqual(history);
+});

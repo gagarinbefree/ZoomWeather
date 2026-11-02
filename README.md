@@ -23,7 +23,7 @@ Each card fills the screen. Current weather appears first, followed by the forec
 
 **Swipe up or down** to move between days. Each vertical transition opens the daily weather card, including when you leave a map or an hourly forecast.
 
-**Pull down on current weather** to refresh it. A spinner appears while loading. If the request fails, your last current weather stays on screen.
+**Swipe down from current weather** to see **Yesterday**, then **A year ago** on the same calendar date. These two daily summaries have no maps or hourly cards. **Pull down on A year ago** to refresh the weather. A spinner appears while loading, then the app returns to current weather. If the request fails, the last successful current weather is shown without an error message.
 
 **See a loading indicator** while a card's forecast is on its way; you can keep browsing.
 
@@ -63,7 +63,7 @@ ZoomWeather is built using [TikiTaki](https://github.com/gagarinbefree/TikiTaki)
 
 **Свайп вверх или вниз** открывает погодную карточку следующего или предыдущего дня, в том числе при переходе с карты или почасового прогноза.
 
-**Потяните текущую погоду вниз**, чтобы обновить её. Пока идёт загрузка, появится спиннер. Если запрос не удался, на экране останется последняя текущая погода.
+**Свайп вниз от текущей погоды** открывает **Вчера**, затем **Год назад** на эту же календарную дату. У этих двух дневных карточек нет карт и почасовых соседей. **Потяните карточку «Год назад» вниз**, чтобы обновить погоду. Во время загрузки появится спиннер, затем приложение вернётся на текущую погоду. При ошибке останутся последние успешные данные без сообщения об ошибке.
 
 **Индикатор загрузки** появляется, пока прогноз для карточки готовится. Можно продолжать листать.
 

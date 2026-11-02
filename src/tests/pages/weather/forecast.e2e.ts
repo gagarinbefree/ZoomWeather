@@ -72,11 +72,11 @@ test('shows A1 while forecast is pending and prioritizes the swiped day', async 
   ).toHaveText('понедельник, 26 окт.');
   await expect.poll(() => requestedDays).toContain(1);
   const viewport = page.getByRole('region', { name: 'Навигация по прогнозу' });
-  await expect(viewport).toHaveAttribute('data-grid-rows', '16');
+  await expect(viewport).toHaveAttribute('data-grid-rows', '18');
   await expect(viewport.locator('[data-cell-id="2026-10-27/daily"]')).toHaveCount(1);
   await viewport.focus();
   await viewport.press('ArrowDown');
-  await expect(viewport).toHaveAttribute('data-row', '1');
+  await expect(viewport).toHaveAttribute('data-row', '3');
   await expect(viewport.locator('[data-cell-id="2026-10-27/daily"] .spinner-border')).toBeVisible();
   await expect.poll(() => requestedDays).toContain(3);
   releaseToday?.();
@@ -104,7 +104,7 @@ test('shows A1 while forecast is pending and prioritizes the swiped day', async 
   await expect(dailyCard).toContainText('07:47');
   await expect(dailyCard).toContainText('17:26');
   await viewport.press('ArrowUp');
-  await expect(viewport).toHaveAttribute('data-row', '0');
+  await expect(viewport).toHaveAttribute('data-row', '2');
   await expect(currentCard).toContainText('07:45');
   await expect(currentCard).toContainText('17:28');
 });
@@ -186,7 +186,7 @@ test('allows navigation to the last day returned by Open Meteo', async ({ page }
   await viewport.focus();
   for (let row = 1; row < 16; row++) {
     await viewport.press('ArrowDown');
-    await expect(viewport).toHaveAttribute('data-row', String(row));
+    await expect(viewport).toHaveAttribute('data-row', String(row + 2));
   }
   await expect(viewport).toHaveAttribute('data-active-cell', '2026-11-10/daily');
   await expect(page.getByRole('article', { name: 'Прогноз на день' })).toBeVisible();

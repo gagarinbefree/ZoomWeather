@@ -13,12 +13,20 @@ const props = withDefaults(
   defineProps<{
     readonly grid: WeatherGrid;
     readonly primaryColumn?: number;
+    readonly primaryRow?: number;
     readonly rowStartColumn?: (row: number) => number;
     readonly locale?: 'ru' | 'en';
     readonly refresh?: ((signal: AbortSignal) => Promise<void>) | null;
     readonly refreshEnabled?: boolean;
   }>(),
-  { locale: 'ru', refreshEnabled: true, refresh: null, primaryColumn: 0, rowStartColumn: () => 0 },
+  {
+    locale: 'ru',
+    refreshEnabled: true,
+    refresh: null,
+    primaryRow: 0,
+    primaryColumn: 0,
+    rowStartColumn: () => 0,
+  },
 );
 const emit = defineEmits<{ positionChange: [position: Position]; error: [error: Error] }>();
 defineSlots<{
@@ -43,6 +51,7 @@ const { cells, position, failed, refreshState, onKeydown } = useWeatherSwipe(
   () => props.refresh !== null && props.refreshEnabled,
   props.primaryColumn,
   props.rowStartColumn,
+  props.primaryRow,
 );
 const refreshing = computed(() => refreshState.value?.phase === 'loading');
 const refreshVisible = computed(

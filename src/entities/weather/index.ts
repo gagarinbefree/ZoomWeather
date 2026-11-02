@@ -30,3 +30,8 @@ export {
   weatherRowStartColumn,
 } from './model/add-weather-maps';
 export type { WeatherMapLayer, WeatherMapCell } from './model/types';
+
+export { addWeatherHistory, weatherHistoryDates, weatherPrimaryRow } from './model/weather-history';
+export type { HistoryPeriod } from './model/weather-history';
+export type { HistoryWeatherCell } from './model/types';
+export { getWeatherHistory } from './api/get-weather-history';

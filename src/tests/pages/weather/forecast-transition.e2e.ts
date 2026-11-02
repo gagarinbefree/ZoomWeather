@@ -112,7 +112,7 @@ test('keeps detailed hours and unique days when the longer fallback arrives duri
 
   for (let row = 4; row >= 1; row--) {
     await viewport.press('ArrowUp');
-    await expect(viewport).toHaveAttribute('data-row', String(row));
+    await expect(viewport).toHaveAttribute('data-row', String(row + 2));
     await settleFrames(page);
   }
   await viewport.press('ArrowRight');

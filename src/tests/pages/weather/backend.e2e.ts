@@ -110,7 +110,7 @@ test('keeps server snapshot dates on current and daily cards when all fresh sour
     new Date(fetchedAt).toISOString(),
   );
   const viewport = page.locator('.weather-viewport');
-  await expect(viewport).toHaveAttribute('data-grid-rows', '3');
+  await expect(viewport).toHaveAttribute('data-grid-rows', '5');
   await viewport.focus();
   await viewport.press('ArrowDown');
   const daily = page.getByRole('article', { name: 'Прогноз на день' });

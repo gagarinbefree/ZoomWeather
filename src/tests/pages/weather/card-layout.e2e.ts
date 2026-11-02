@@ -84,7 +84,7 @@ test('keeps current daily and hourly cards fully visible at the Android viewport
   const viewport = page.getByRole('region', { name: 'Навигация по прогнозу' });
   await viewport.focus();
   await viewport.press('ArrowDown');
-  await expect(viewport).toHaveAttribute('data-row', '1');
+  await expect(viewport).toHaveAttribute('data-row', '3');
   const daily = page.getByRole('article', { name: 'Прогноз на день' });
   await expect(daily).toContainText('07:47');
   await expectCardInsideCell(daily);
@@ -202,7 +202,7 @@ for (const scenario of [
     );
     const anchors = await readCardAnchors(current);
     const viewport = page.locator('.weather-viewport');
-    await expect(viewport).toHaveAttribute('data-grid-rows', '3');
+    await expect(viewport).toHaveAttribute('data-grid-rows', '5');
     await viewport.focus();
     for (const [key, row, column] of [
       ['ArrowRight', '0', '4'],
@@ -211,7 +211,7 @@ for (const scenario of [
       ['ArrowRight', '1', '4'],
     ] as const) {
       await viewport.press(key);
-      await expect(viewport).toHaveAttribute('data-row', row);
+      await expect(viewport).toHaveAttribute('data-row', String(Number(row) + 2));
       await expect(viewport).toHaveAttribute('data-column', column);
       await expect(current.locator('dd')).toHaveCount(6);
       const daily = column === '3';
@@ -233,7 +233,7 @@ test('tiles subtle weather drawings at their natural size on every card', async 
   const current = page.locator('[data-tikitaki-role="current"] article');
   await expect(current.locator('dd')).toHaveCount(8);
   const viewport = page.locator('.weather-viewport');
-  await expect(viewport).toHaveAttribute('data-grid-rows', '3');
+  await expect(viewport).toHaveAttribute('data-grid-rows', '5');
   await viewport.focus();
   for (const [key, drawing] of [
     [null, 'overcast'],

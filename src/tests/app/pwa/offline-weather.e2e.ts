@@ -1,5 +1,6 @@
 import { expect, test, type Locator } from '@/tests/shared/lib/browser-test';
 import { currentResponse } from '@/tests/entities/weather/api/current-fixture';
+import { historyFixture } from '@/tests/entities/weather/api/history-fixture';
 import { forecastResponse } from '@/tests/entities/weather/api/forecast-fixture';
 
 test.use({ permissions: ['geolocation'], geolocation: { latitude: 58, longitude: 56.25 } });
@@ -78,6 +79,12 @@ test('shows the last forecast immediately after an offline restart', async ({ pa
     await route.fulfill({ status: 503, json: {} });
   });
 
+  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**', (route) =>
+    route.fulfill({
+      json: historyFixture(new URL(route.request().url()).searchParams.get('start_date') ?? ''),
+    }),
+  );
+
   await page.goto('./');
   await expect
     .poll(
@@ -85,7 +92,12 @@ test('shows the last forecast immediately after an offline restart', async ({ pa
         const raw: unknown = await page.evaluate(() =>
           localStorage.getItem('zoomweather.weather.v1'),
         );
-        return typeof raw === 'string' ? [...raw.matchAll(/"date"/g)].length : 0;
+        if (typeof raw !== 'string') return 0;
+        const saved: unknown = JSON.parse(raw);
+        if (typeof saved !== 'object' || saved === null || !('forecast' in saved)) return 0;
+        const forecast = saved.forecast;
+        if (typeof forecast !== 'object' || forecast === null || !('days' in forecast)) return 0;
+        return Array.isArray(forecast.days) ? forecast.days.length : 0;
       },
       { timeout: 15_000 },
     )
@@ -104,10 +116,10 @@ test('shows the last forecast immediately after an offline restart', async ({ pa
   await expect(current).toContainText('07:45');
   await page.evaluate(async () => document.fonts.ready);
   const liveCurrent = await cardAppearance(current);
-  await expect(viewport).toHaveAttribute('data-grid-rows', '3');
+  await expect(viewport).toHaveAttribute('data-grid-rows', '5');
   await viewport.focus();
   await viewport.press('ArrowDown');
-  await expect(viewport).toHaveAttribute('data-row', '1');
+  await expect(viewport).toHaveAttribute('data-row', '3');
   await expect(daily).toContainText('07:47');
   const liveDaily = await cardAppearance(daily);
   await viewport.press('ArrowRight');
@@ -118,6 +130,19 @@ test('shows the last forecast immediately after an offline restart', async ({ pa
   await expect(hourly).toContainText('9,5°C');
   const liveHourly = await cardAppearance(hourly);
 
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const saved: unknown = JSON.parse(localStorage.getItem('zoomweather.weather.v1') ?? '{}');
+        return typeof saved === 'object' &&
+          saved !== null &&
+          'history' in saved &&
+          Array.isArray(saved.history)
+          ? saved.history.length
+          : 0;
+      }),
+    )
+    .toBe(2);
   await context.setOffline(true);
   await page.reload();
   await expect(current).toContainText('8,9°C');
@@ -147,11 +172,11 @@ test('shows the last forecast immediately after an offline restart', async ({ pa
   await expect(current.getByRole('status')).toBeHidden();
   await viewport.focus();
   await page.screenshot({ path: test.info().outputPath('cached-current.png') });
-  await expect(viewport).toHaveAttribute('data-grid-rows', '3');
+  await expect(viewport).toHaveAttribute('data-grid-rows', '5');
   await expect(viewport.locator('[data-cell-id="2026-10-27/daily"]')).toHaveCount(1);
   await viewport.focus();
   await viewport.press('ArrowDown');
-  await expect(viewport).toHaveAttribute('data-row', '1');
+  await expect(viewport).toHaveAttribute('data-row', '3');
   await expect(daily).toContainText('Завтра');
   expect(await cardAppearance(daily)).toEqual(liveDaily);
   await daily.locator('summary').focus();
@@ -170,4 +195,17 @@ test('shows the last forecast immediately after an offline restart', async ({ pa
   await hourly.locator('summary').click();
   await expect(hourly.getByRole('status')).toContainText('Сохранённый прогноз от');
   expect(await cardAppearance(hourly)).toEqual(liveHourly);
+  await hourly.locator('summary').press('Escape');
+  await viewport.focus();
+  await viewport.press('ArrowUp');
+  await expect(current).toBeVisible();
+  await viewport.press('ArrowUp');
+  const yesterday = page.getByRole('article', { name: 'Вчера', exact: true });
+  await expect(yesterday).toContainText('2,3 мм');
+  await expect(yesterday.locator('.weather-cache-status__icon')).toBeVisible();
+  await viewport.press('ArrowUp');
+  const year = page.getByRole('article', { name: 'Год назад', exact: true });
+  await expect(year.locator('time').first()).toHaveAttribute('datetime', '2025-10-26');
+  await expect(year.locator('.weather-cache-status__icon')).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('cached-year-ago.png') });
 });

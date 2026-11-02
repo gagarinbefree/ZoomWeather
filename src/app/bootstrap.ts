@@ -6,6 +6,7 @@ import { locate, type DeviceGeolocation } from '@/entities/location';
 import {
   getCurrentWeather,
   getForecast,
+  getWeatherHistory,
   getOpenMeteoCurrent,
   getOpenMeteoForecast,
   getOpenWeatherMapCurrent,
@@ -14,6 +15,7 @@ import {
   type Forecast,
 } from '@/entities/weather';
 import { forecastServicesKey, longestForecast, type ForecastServices } from '@/features/forecast';
+import { historyServicesKey } from '@/features/history';
 import { ApiError } from '@/shared/api';
 /**
  * mountWeatherApp. Start the app with shared weather and location services
@@ -54,6 +56,16 @@ export function mountWeatherApp(root: Component, device?: DeviceGeolocation): vo
     .use(createPinia())
     .provide(currentWeatherServicesKey, services)
     .provide(forecastServicesKey, forecastServices)
+    .provide(historyServicesKey, {
+      history: (context, date, signal) =>
+        getWeatherHistory({
+          location: context.location,
+          timeZone: context.timeZone,
+          locale: context.locale,
+          date,
+          signal,
+        }),
+    })
     .mount('#app');
 }
 
