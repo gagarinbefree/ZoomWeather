@@ -89,14 +89,12 @@ describe('saved provider metadata', () => {
   });
 });
 
-it('retains both historical summaries without hourly data in the saved weather snapshot', async () => {
+it('discards legacy historical data while restoring current weather and future forecasts', async () => {
   const value = await snapshot();
-  const original = value.forecast.days[0];
-  if (!original) throw new Error('Missing daily fixture');
-  const history = [
-    { ...original, date: '2026-10-25', hours: [], precipitation: 2.3, rainChance: null },
-    { ...original, date: '2025-10-26', hours: [], precipitation: 1, rainChance: null },
-  ];
-  writeWeatherSnapshot({ ...value, history });
-  expect(readWeatherSnapshot()?.history).toEqual(history);
+  const legacy = { ...value, history: [{ date: '2025-10-26' }] };
+  localStorage.setItem('zoomweather.weather.v1', JSON.stringify(legacy));
+  expect(readWeatherSnapshot()).toEqual(value);
+  expect(localStorage.getItem('zoomweather.weather.v1')).not.toContain('history');
+  writeWeatherSnapshot(legacy);
+  expect(localStorage.getItem('zoomweather.weather.v1')).not.toContain('history');
 });

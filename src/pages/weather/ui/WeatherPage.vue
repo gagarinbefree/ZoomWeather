@@ -44,8 +44,10 @@ const mapGrid = computed(() =>
       now: mapNow.value,
       timeZone: state.value.status === 'ready' ? state.value.weather.timeZone : 'UTC',
     }),
+    history.days,
   ),
 );
+const primaryRow = computed(() => weatherPrimaryRow(mapGrid.value));
 let mapClock: ReturnType<typeof setInterval> | undefined;
 
 /** updateMapClock. Recheck available forecast dates when the app returns or a minute passes. */
@@ -82,7 +84,6 @@ function saveSnapshot(forecastDays = forecast.days): void {
     locale: weather.locale,
     weather: current.weather,
     forecast: { days: forecastDays },
-    history: history.days,
   };
   writeWeatherSnapshot(snapshot);
 }
@@ -115,24 +116,21 @@ async function reloadWeather(signal?: AbortSignal): Promise<void> {
       forecastServices,
     );
   const today = grid.value[0]?.[0]?.date;
-  const historyLoad =
-    historyServices && today
-      ? history.load(
-          {
-            today,
-            city: current.weather.city,
-            country: current.weather.country,
-            location: current.location,
-            timeZone: current.weather.timeZone,
-            locale: weather.locale,
-          },
-          historyServices,
-          signal,
-        )
-      : Promise.resolve();
+  if (historyServices && today)
+    void history.load(
+      {
+        today,
+        city: current.weather.city,
+        country: current.weather.country,
+        location: current.location,
+        timeZone: current.weather.timeZone,
+        locale: weather.locale,
+      },
+      historyServices,
+      signal,
+    );
   saveSnapshot([]);
   await nextTick();
-  if (signal) await historyLoad;
 }
 
 /**
@@ -158,7 +156,7 @@ function dayIndex(date: string): number {
  * @param position The selected grid row and column.
  */
 function onPositionChange(position: Position): void {
-  if (position.row >= weatherPrimaryRow) forecast.focus(position.row - weatherPrimaryRow);
+  if (position.row >= primaryRow.value) forecast.focus(position.row - primaryRow.value);
 }
 /**
  * start. Show saved weather and start loading fresh data
@@ -168,7 +166,6 @@ function start(): void {
   if (snapshot) {
     try {
       weather.restore(snapshot);
-      history.restore(snapshot.history ?? [], snapshot.weather, snapshot.savedAt);
       forecast.restore(
         snapshot.forecast,
         weather.state.status === 'ready' ? weather.state.now : Date.now(),
@@ -217,12 +214,6 @@ watch(
   },
 );
 watch(
-  () => history.days,
-  () => {
-    saveSnapshot();
-  },
-);
-watch(
   locale,
   (language) => {
     document.documentElement.lang = language;
@@ -238,7 +229,7 @@ watch(
       :key="props.navigationReset"
       :grid="mapGrid"
       :primary-column="weatherPrimaryColumn"
-      :primary-row="weatherPrimaryRow"
+      :primary-row="primaryRow"
       :row-start-column="mapRowStart"
       :locale="locale"
       :refresh="reloadWeather"

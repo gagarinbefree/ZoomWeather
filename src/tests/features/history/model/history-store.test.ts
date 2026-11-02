@@ -35,10 +35,13 @@ function day(date: string, maximum = 5): ForecastDay {
     hours: [],
   };
 }
-beforeEach(() => setActivePinia(createPinia()));
+beforeEach(() => {
+  setActivePinia(createPinia());
+  localStorage.clear();
+});
 
 describe('historical weather state', () => {
-  it('loads both dates and retains the last success if a forced refresh fails', async () => {
+  it('loads both dates but removes unavailable summaries after a failed refresh', async () => {
     const store = useHistoryStore();
     const request = vi
       .fn<HistoryServices['history']>()
@@ -50,7 +53,8 @@ describe('historical weather state', () => {
     request.mockRejectedValue(new ApiError('timeout'));
     await store.load(context, { history: request });
     expect(request).toHaveBeenCalledTimes(4);
-    expect(store.day('2025-11-02')?.maximum).toBe(5);
+    expect(store.days).toEqual([]);
+    expect(localStorage.length).toBe(0);
   });
 
   it('discards the previous city and ignores late results from cancelled sessions', async () => {
@@ -76,9 +80,9 @@ describe('historical weather state', () => {
   });
 });
 
-it('keeps restored historical data after a failure and ignores an aborted refresh', async () => {
+it('ignores aborted background results without persisting history', async () => {
   const store = useHistoryStore();
-  store.restore([day('2025-11-02')], context, 1234);
+  await store.load(context, { history: (_context, date) => Promise.resolve(day(date)) });
   const abort = new AbortController();
   const finish: (() => void)[] = [];
   const history: HistoryServices['history'] = (_context, date) =>
@@ -89,12 +93,12 @@ it('keeps restored historical data after a failure and ignores an aborted refres
     });
   const pending = store.load(context, { history }, abort.signal);
   expect(store.day('2025-11-02')?.maximum).toBe(5);
-  expect(store.savedTimes['2025-11-02']).toBe(1234);
+  expect(localStorage.length).toBe(0);
   abort.abort();
   finish.forEach((resolve) => {
     resolve();
   });
   await pending;
   expect(store.day('2025-11-02')?.maximum).toBe(5);
-  expect(store.failures).toEqual({});
+  expect(localStorage.length).toBe(0);
 });

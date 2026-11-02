@@ -130,19 +130,6 @@ test('shows the last forecast immediately after an offline restart', async ({ pa
   await expect(hourly).toContainText('9,5°C');
   const liveHourly = await cardAppearance(hourly);
 
-  await expect
-    .poll(() =>
-      page.evaluate(() => {
-        const saved: unknown = JSON.parse(localStorage.getItem('zoomweather.weather.v1') ?? '{}');
-        return typeof saved === 'object' &&
-          saved !== null &&
-          'history' in saved &&
-          Array.isArray(saved.history)
-          ? saved.history.length
-          : 0;
-      }),
-    )
-    .toBe(2);
   await context.setOffline(true);
   await page.reload();
   await expect(current).toContainText('8,9°C');
@@ -172,11 +159,11 @@ test('shows the last forecast immediately after an offline restart', async ({ pa
   await expect(current.getByRole('status')).toBeHidden();
   await viewport.focus();
   await page.screenshot({ path: test.info().outputPath('cached-current.png') });
-  await expect(viewport).toHaveAttribute('data-grid-rows', '5');
+  await expect(viewport).toHaveAttribute('data-grid-rows', '3');
   await expect(viewport.locator('[data-cell-id="2026-10-27/daily"]')).toHaveCount(1);
   await viewport.focus();
   await viewport.press('ArrowDown');
-  await expect(viewport).toHaveAttribute('data-row', '3');
+  await expect(viewport).toHaveAttribute('data-row', '1');
   await expect(daily).toContainText('Завтра');
   expect(await cardAppearance(daily)).toEqual(liveDaily);
   await daily.locator('summary').focus();
@@ -200,12 +187,11 @@ test('shows the last forecast immediately after an offline restart', async ({ pa
   await viewport.press('ArrowUp');
   await expect(current).toBeVisible();
   await viewport.press('ArrowUp');
-  const yesterday = page.getByRole('article', { name: 'Вчера', exact: true });
-  await expect(yesterday).toContainText('2,3 мм');
-  await expect(yesterday.locator('.weather-cache-status__icon')).toBeVisible();
-  await viewport.press('ArrowUp');
-  const year = page.getByRole('article', { name: 'Год назад', exact: true });
-  await expect(year.locator('time').first()).toHaveAttribute('datetime', '2025-10-26');
-  await expect(year.locator('.weather-cache-status__icon')).toBeVisible();
-  await page.screenshot({ path: test.info().outputPath('cached-year-ago.png') });
+  await expect(viewport).toHaveAttribute('data-row', '0');
+  await expect(current).toBeVisible();
+  await expect(page.getByRole('article', { name: 'Вчера', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('article', { name: 'Год назад', exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('zoomweather.weather.v1'))).not.toContain(
+    'history',
+  );
 });

@@ -22,7 +22,7 @@ test('shows saved weather while resolving city and country before requesting fre
   });
   await page.goto('./');
   await expect(page.locator('.current-weather-card')).toBeVisible();
-  await expect(page.locator('.weather-viewport')).toHaveAttribute('data-grid-rows', '5');
+  await expect(page.locator('.weather-viewport')).toHaveAttribute('data-grid-rows', '3');
   const beforeReload = currentRequests;
   let release: (() => void) | undefined;
   await page.route('https://api.bigdatacloud.net/**', async (route) => {

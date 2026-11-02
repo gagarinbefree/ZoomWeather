@@ -11,7 +11,6 @@ export interface WeatherSnapshot {
   readonly locale: Locale;
   readonly weather: CurrentWeather;
   readonly forecast: Forecast;
-  readonly history?: readonly ForecastDay[];
 }
 
 /**
@@ -152,11 +151,7 @@ function isSnapshot(value: unknown): value is WeatherSnapshot {
       forecast['intervalHours'] === 2 ||
       forecast['intervalHours'] === 3) &&
     Array.isArray(forecast['days']) &&
-    forecast['days'].every(isDay) &&
-    (value['history'] === undefined ||
-      (Array.isArray(value['history']) &&
-        value['history'].length <= 2 &&
-        value['history'].every((day) => isDay(day) && day.hours.length === 0)))
+    forecast['days'].every(isDay)
   );
 }
 
@@ -171,7 +166,16 @@ export function readWeatherSnapshot(storage: Storage = localStorage): WeatherSna
     const json = storage.getItem(storageKey);
     if (!json) return null;
     const value: unknown = JSON.parse(json);
-    return isSnapshot(value) ? value : null;
+    if (!isSnapshot(value)) return null;
+    const snapshot: WeatherSnapshot = {
+      version: value.version,
+      savedAt: value.savedAt,
+      locale: value.locale,
+      weather: value.weather,
+      forecast: value.forecast,
+    };
+    if ('history' in value) writeWeatherSnapshot(snapshot, storage);
+    return snapshot;
   } catch {
     return null;
   }
@@ -188,7 +192,16 @@ export function writeWeatherSnapshot(
   storage: Storage = localStorage,
 ): void {
   try {
-    storage.setItem(storageKey, JSON.stringify(value));
+    storage.setItem(
+      storageKey,
+      JSON.stringify({
+        version: value.version,
+        savedAt: value.savedAt,
+        locale: value.locale,
+        weather: value.weather,
+        forecast: value.forecast,
+      }),
+    );
   } catch {
     // Weather remains available for this session when storage is disabled or full.
   }

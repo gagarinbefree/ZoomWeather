@@ -338,3 +338,93 @@ it('keeps the daily column aligned when future maps are unavailable', async () =
   await environment.settle();
   expect(viewport.attributes('data-active-cell')).toBe('2026-10-26/current');
 });
+
+it('keeps the selected hourly cell when background history appears and disappears', async () => {
+  const { addWeatherMaps, addWeatherHistory, weatherPrimaryRow, weatherRowStartColumn } =
+    await import('@/entities/weather');
+  const { historyDayFixture } = await import('@/tests/entities/weather/model/history-day-fixture');
+  const base = addWeatherMaps(fixtureGrid, { now: Date.UTC(2026, 9, 26), timeZone: 'UTC' });
+  let grid = base;
+  const wrapper = mount(WeatherGrid, {
+    attachTo: document.body,
+    props: {
+      grid,
+      primaryColumn: 3,
+      primaryRow: 0,
+      rowStartColumn: (row: number) => weatherRowStartColumn(grid, row),
+    },
+    slots: { default: ({ cell }: { readonly cell: WeatherCell }) => h(ProbeCell, { id: cell.id }) },
+    global: { plugins: [createPinia()] },
+  });
+  wrappers.push(wrapper);
+  await nextTick();
+  const viewport = wrapper.get('.weather-viewport');
+  await viewport.trigger('keydown', { key: 'ArrowRight' });
+  await environment.settle();
+  const selected = viewport.attributes('data-active-cell');
+  grid = addWeatherHistory(base, [
+    historyDayFixture('2025-10-26'),
+    historyDayFixture('2026-10-25'),
+  ]);
+  await wrapper.setProps({ grid, primaryRow: weatherPrimaryRow(grid) });
+  await environment.settle();
+  expect(viewport.attributes('data-active-cell')).toBe(selected);
+  expect(viewport.attributes('data-row')).toBe('2');
+  await viewport.trigger('keydown', { key: 'ArrowUp' });
+  await environment.settle();
+  expect(viewport.attributes('data-active-cell')).toBe('2026-10-25/history/yesterday');
+  grid = base;
+  await wrapper.setProps({ grid, primaryRow: 0 });
+  await environment.settle();
+  expect(viewport.attributes('data-active-cell')).toBe('2026-10-26/current');
+  expect(viewport.attributes('data-row')).toBe('0');
+  expect(wrapper.emitted('error')).toBeUndefined();
+});
+
+it('defers history insertion until a current weather refresh returns to the main cell', async () => {
+  const { addWeatherMaps, addWeatherHistory, weatherPrimaryRow, weatherRowStartColumn } =
+    await import('@/entities/weather');
+  const { historyDayFixture } = await import('@/tests/entities/weather/model/history-day-fixture');
+  const base = addWeatherMaps(fixtureGrid, { now: Date.UTC(2026, 9, 26), timeZone: 'UTC' });
+  let grid = base;
+  let finish: (() => void) | undefined;
+  const refresh = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const wrapper = mount(WeatherGrid, {
+    attachTo: document.body,
+    props: {
+      grid,
+      primaryColumn: 3,
+      primaryRow: 0,
+      rowStartColumn: (row: number) => weatherRowStartColumn(grid, row),
+      refresh,
+    },
+    slots: { default: ({ cell }: { readonly cell: WeatherCell }) => h(ProbeCell, { id: cell.id }) },
+    global: { plugins: [createPinia()] },
+  });
+  wrappers.push(wrapper);
+  await nextTick();
+  const viewport = wrapper.get<HTMLElement>('.weather-viewport');
+  dragDown(viewport.element);
+  await environment.settle();
+  expect(viewport.attributes('data-refresh-phase')).toBe('loading');
+  grid = addWeatherHistory(base, [
+    historyDayFixture('2025-10-26'),
+    historyDayFixture('2026-10-25'),
+  ]);
+  await wrapper.setProps({ grid, primaryRow: weatherPrimaryRow(grid) });
+  await environment.settle();
+  expect(viewport.attributes('data-active-cell')).toBe('2026-10-26/current');
+  expect(viewport.attributes('data-refresh-phase')).toBe('loading');
+  finish?.();
+  await environment.settle();
+  await environment.settle();
+  expect(viewport.attributes('data-active-cell')).toBe('2026-10-26/current');
+  expect(viewport.attributes('data-row')).toBe('2');
+  expect(viewport.attributes('data-refresh-phase')).toBe('idle');
+  expect(wrapper.emitted('error')).toBeUndefined();
+});

@@ -1,5 +1,4 @@
 import { test as base } from '@playwright/test';
-import { historyFixture } from '@/tests/entities/weather/api/history-fixture';
 export { expect, type Page, type Locator } from '@playwright/test';
 
 export const test = base.extend({
@@ -19,8 +18,7 @@ export const test = base.extend({
     await page.route(
       'https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**',
       async (route) => {
-        const date = new URL(route.request().url()).searchParams.get('start_date') ?? '';
-        await route.fulfill({ json: historyFixture(date) });
+        await route.fulfill({ status: 503, json: {} });
       },
     );
     await use(page);

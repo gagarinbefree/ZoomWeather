@@ -23,7 +23,7 @@ Each card fills the screen. Current weather appears first, followed by the forec
 
 **Swipe up or down** to move between days. Each vertical transition opens the daily weather card, including when you leave a map or an hourly forecast.
 
-**Swipe down from current weather** to see **Yesterday**, then **A year ago** on the same calendar date. These two daily summaries have no maps or hourly cards. **Pull down on A year ago** to refresh the weather. A spinner appears while loading, then the app returns to current weather. If the request fails, the last successful current weather is shown without an error message.
+Historical summaries load quietly in the background and appear only when available. **Swipe down from current weather** to see **Yesterday**, then **A year ago** on the same calendar date. These cards have no maps or hourly forecasts and are not saved for offline use. **Pull down on the topmost available card** to refresh the weather. When no history is available, pull down on current weather. A spinner appears while loading, then the app returns to current weather. If refreshing fails, the last successful current weather is shown without an error message.
 
 **See a loading indicator** while a card's forecast is on its way; you can keep browsing.
 
@@ -63,7 +63,7 @@ ZoomWeather is built using [TikiTaki](https://github.com/gagarinbefree/TikiTaki)
 
 **Свайп вверх или вниз** открывает погодную карточку следующего или предыдущего дня, в том числе при переходе с карты или почасового прогноза.
 
-**Свайп вниз от текущей погоды** открывает **Вчера**, затем **Год назад** на эту же календарную дату. У этих двух дневных карточек нет карт и почасовых соседей. **Потяните карточку «Год назад» вниз**, чтобы обновить погоду. Во время загрузки появится спиннер, затем приложение вернётся на текущую погоду. При ошибке останутся последние успешные данные без сообщения об ошибке.
+История тихо загружается в фоне, и её карточки появляются только при наличии данных. **Свайп вниз от текущей погоды** открывает **Вчера**, затем **Год назад** на ту же календарную дату. У этих карточек нет карт и почасовых прогнозов, и они не сохраняются для просмотра без интернета. **Потяните самую верхнюю доступную карточку вниз**, чтобы обновить погоду. Если истории нет, потяните вниз текущую погоду. Во время загрузки появится спиннер, затем приложение вернётся на текущую погоду. При ошибке останется последний успешный ответ без сообщения об ошибке.
 
 **Индикатор загрузки** появляется, пока прогноз для карточки готовится. Можно продолжать листать.
 

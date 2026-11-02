@@ -1,4 +1,5 @@
 import type { Grid } from 'tikitaki';
+import type { ForecastDay } from './forecast';
 
 export interface ForecastDaySlots {
   readonly date: string;
@@ -41,6 +42,7 @@ export interface WeatherMapCell extends WeatherCellIdentity {
 }
 export interface HistoryWeatherCell extends WeatherCellIdentity {
   readonly kind: 'history';
+  readonly weather: ForecastDay;
   readonly timestamp?: never;
   readonly period: 'yesterday' | 'yearAgo';
 }

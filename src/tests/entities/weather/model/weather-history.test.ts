@@ -1,3 +1,4 @@
+import { historyDayFixture } from '@/tests/entities/weather/model/history-day-fixture';
 import { describe, expect, it } from 'vitest';
 import {
   addWeatherHistory,
@@ -11,10 +12,19 @@ describe('historical weather rows', () => {
   it('puts year ago and yesterday above the current anchor without horizontal neighbors', () => {
     const now = Date.UTC(2026, 10, 2, 10);
     const raw = createWeatherGrid({ now, timeZone: 'Asia/Yekaterinburg', days: [] });
-    const grid = addWeatherHistory(addWeatherMaps(raw, { now, timeZone: 'Asia/Yekaterinburg' }));
-    expect(weatherPrimaryRow).toBe(2);
+    const grid = addWeatherHistory(addWeatherMaps(raw, { now, timeZone: 'Asia/Yekaterinburg' }), [
+      historyDayFixture('2025-11-02'),
+      historyDayFixture('2026-11-01'),
+    ]);
+    expect(weatherPrimaryRow(grid)).toBe(2);
     expect(grid[0]).toEqual([
-      { id: '2025-11-02/history/yearAgo', kind: 'history', period: 'yearAgo', date: '2025-11-02' },
+      {
+        id: '2025-11-02/history/yearAgo',
+        kind: 'history',
+        period: 'yearAgo',
+        date: '2025-11-02',
+        weather: historyDayFixture('2025-11-02'),
+      },
     ]);
     expect(grid[1]).toEqual([
       {
@@ -22,6 +32,7 @@ describe('historical weather rows', () => {
         kind: 'history',
         period: 'yesterday',
         date: '2026-11-01',
+        weather: historyDayFixture('2026-11-01'),
       },
     ]);
     expect(grid[2]?.[3]?.kind).toBe('current');
@@ -41,4 +52,17 @@ describe('historical weather rows', () => {
     });
     expect(() => weatherHistoryDates('2026-02-30')).toThrow();
   });
+});
+
+it('omits unavailable dates and derives the current row from only successful summaries', () => {
+  const base = createWeatherGrid({ now: Date.UTC(2026, 10, 2), timeZone: 'UTC', days: [] });
+  expect(addWeatherHistory(base, [])).toEqual(base);
+  expect(weatherPrimaryRow(addWeatherHistory(base, []))).toBe(0);
+  const partial = addWeatherHistory(base, [historyDayFixture('2026-11-01')]);
+  expect(weatherPrimaryRow(partial)).toBe(1);
+  expect(partial[0]?.[0]).toMatchObject({ kind: 'history', period: 'yesterday' });
+  expect(partial.flat().some((cell) => cell.kind === 'history' && cell.period === 'yearAgo')).toBe(
+    false,
+  );
+  expect(addWeatherHistory(base, [historyDayFixture('2020-01-01')])).toEqual(base);
 });

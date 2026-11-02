@@ -160,7 +160,7 @@ test('uses the available three hour OpenWeatherMap forecast after both forecast 
   await viewport.press('ArrowRight');
   await expect(page.getByRole('article', { name: 'Почасовой прогноз' })).toContainText('21:00');
   await viewport.press('ArrowDown');
-  await expect(viewport).toHaveAttribute('data-row', '3');
+  await expect(viewport).toHaveAttribute('data-row', '1');
   await expect(page.getByRole('article', { name: 'Прогноз на день' })).toContainText('Завтра');
   await expect(page.getByRole('article', { name: 'Прогноз на день' })).toContainText('Нет данных');
   await viewport.press('ArrowRight');

@@ -38,7 +38,7 @@ defineSlots<{
 const container = shallowRef<HTMLElement | null>(null);
 const instructionId = useId();
 const text = computed(() => messages[props.locale]);
-const { cells, position, failed, refreshState, onKeydown } = useWeatherSwipe(
+const { cells, activeId, gridRows, position, failed, refreshState, onKeydown } = useWeatherSwipe(
   container,
   () => props.grid,
   (next) => {
@@ -50,8 +50,8 @@ const { cells, position, failed, refreshState, onKeydown } = useWeatherSwipe(
   (signal) => props.refresh?.(signal) ?? Promise.resolve(),
   () => props.refresh !== null && props.refreshEnabled,
   props.primaryColumn,
-  props.rowStartColumn,
-  props.primaryRow,
+  (row) => props.rowStartColumn(row),
+  () => props.primaryRow,
 );
 const refreshing = computed(() => refreshState.value?.phase === 'loading');
 const refreshVisible = computed(
@@ -63,11 +63,6 @@ const refreshLabel = computed(() =>
     : refreshState.value?.phase === 'pulling'
       ? text.value.pullToRefresh
       : text.value.refreshingWeather,
-);
-const activeId = computed(
-  () =>
-    props.grid[position.value.row]?.[position.value.col - props.rowStartColumn(position.value.row)]
-      ?.id,
 );
 </script>
 
@@ -87,7 +82,7 @@ const activeId = computed(
     :aria-busy="refreshing"
     :data-refresh-phase="refreshState?.phase ?? 'idle'"
     :data-active-cell="activeId"
-    :data-grid-rows="grid.length"
+    :data-grid-rows="gridRows"
     :data-row="position.row"
     :data-column="position.col"
     @keydown="onKeydown"

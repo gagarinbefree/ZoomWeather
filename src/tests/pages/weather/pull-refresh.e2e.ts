@@ -73,6 +73,7 @@ async function pullDown(page: Page, distance = 200): Promise<void> {
  */
 async function openYearAgo(page: Page): Promise<void> {
   const viewport = page.locator('.weather-viewport');
+  await expect(viewport).toHaveAttribute('data-row', '2');
   await viewport.focus();
   await viewport.press('ArrowUp');
   await expect(page.getByRole('article', { name: 'Вчера', exact: true })).toBeVisible();
@@ -183,6 +184,7 @@ test('moves from current weather to history without refreshing and ignores a sho
   await page.goto('./');
   const viewport = page.locator('.weather-viewport');
   await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
+  await expect(viewport).toHaveAttribute('data-row', '2');
   await pullDown(page);
   await expect(viewport).toHaveAttribute('data-row', '1');
   await expect(page.getByRole('article', { name: 'Вчера', exact: true })).toBeVisible();
@@ -193,4 +195,137 @@ test('moves from current weather to history without refreshing and ignores a sho
   await expect(page.locator('[data-refresh-indicator]')).toBeHidden();
   await expect(viewport).toHaveAttribute('data-row', '0');
   expect(requests).toBe(1);
+});
+
+for (const response of ['failed', 'empty'] as const) {
+  test(`refreshes current weather without historical cards when history is ${response}`, async ({
+    page,
+  }) => {
+    let requests = 0;
+    await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**', (route) =>
+      route.fulfill(
+        response === 'failed' ? { status: 503, json: {} } : { json: { daily: { time: [] } } },
+      ),
+    );
+    await page.route(
+      'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+      async (route) => {
+        requests++;
+        await route.fulfill({
+          json: {
+            ...currentResponse,
+            current: { ...currentResponse.current, temp_c: requests === 1 ? 8.9 : 12.3 },
+          },
+        });
+      },
+    );
+    await page.goto('./');
+    const viewport = page.locator('.weather-viewport');
+    const current = page.getByRole('article', { name: 'Текущая погода' });
+    await expect(current).toContainText('8,9°C');
+    await expect(viewport).toHaveAttribute('data-row', '0');
+    await pullDown(page);
+    await expect(current).toContainText('12,3°C');
+    await expect(viewport).toHaveAttribute('data-row', '0');
+    await expect(page.locator('[data-refresh-indicator]')).toBeHidden();
+    await expect(page.getByRole('article', { name: 'Вчера', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('article', { name: 'Год назад', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    expect(requests).toBe(2);
+  });
+}
+
+test('keeps the selected hourly forecast when background history appears', async ({ page }) => {
+  let release: (() => void) | undefined;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(
+    'https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**',
+    async (route) => {
+      await gate;
+      await route.fulfill({
+        json: historyFixture(new URL(route.request().url()).searchParams.get('start_date') ?? ''),
+      });
+    },
+  );
+  await page.route('https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**', (route) =>
+    route.fulfill({ json: currentResponse }),
+  );
+  await page.goto('./');
+  const viewport = page.locator('.weather-viewport');
+  await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
+  await viewport.focus();
+  await viewport.press('ArrowRight');
+  await expect(page.getByRole('article', { name: 'Почасовой прогноз' })).toBeVisible();
+  const selected = await viewport.getAttribute('data-active-cell');
+  expect(selected).not.toBeNull();
+  await expect(viewport).toHaveAttribute('data-row', '0');
+  release?.();
+  await expect(viewport).toHaveAttribute('data-row', '2');
+  await expect(viewport).toHaveAttribute('data-active-cell', selected ?? '');
+  await expect(viewport).toHaveAttribute('data-column', '4');
+  await expect(page.getByRole('article', { name: 'Почасовой прогноз' })).toBeVisible();
+});
+
+test('drops unavailable history after refresh and returns to current weather', async ({ page }) => {
+  let requests = 0;
+  await page.route(
+    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    async (route) => {
+      requests++;
+      await route.fulfill({ json: currentResponse });
+    },
+  );
+  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**', (route) =>
+    route.fulfill(
+      requests > 1
+        ? { status: 503, json: {} }
+        : {
+            json: historyFixture(
+              new URL(route.request().url()).searchParams.get('start_date') ?? '',
+            ),
+          },
+    ),
+  );
+  await page.goto('./');
+  await openYearAgo(page);
+  await pullDown(page);
+  await expect.poll(() => requests).toBe(2);
+  await expect(page.locator('.weather-viewport')).toHaveAttribute('data-row', '0');
+  await expect(page.locator('[data-refresh-indicator]')).toBeHidden();
+  await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
+  await expect(page.getByRole('article', { name: 'Вчера', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('article', { name: 'Год назад', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('shows only yesterday and refreshes from it when anniversary history is unavailable', async ({
+  page,
+}) => {
+  let requests = 0;
+  await page.route(
+    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    async (route) => {
+      requests++;
+      await route.fulfill({ json: currentResponse });
+    },
+  );
+  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**', (route) => {
+    const date = new URL(route.request().url()).searchParams.get('start_date') ?? '';
+    return route.fulfill(
+      date === '2026-10-25' ? { json: historyFixture(date) } : { status: 503, json: {} },
+    );
+  });
+  await page.goto('./');
+  const viewport = page.locator('.weather-viewport');
+  await expect(viewport).toHaveAttribute('data-row', '1');
+  await viewport.focus();
+  await viewport.press('ArrowUp');
+  await expect(page.getByRole('article', { name: 'Вчера', exact: true })).toBeVisible();
+  await expect(page.getByRole('article', { name: 'Год назад', exact: true })).toHaveCount(0);
+  await pullDown(page);
+  await expect.poll(() => requests).toBe(2);
+  await expect(viewport).toHaveAttribute('data-row', '1');
+  await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
 });

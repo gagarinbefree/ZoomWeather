@@ -104,7 +104,7 @@ test('opens temperature wind and pressure to the left and returns vertically to 
   const viewport = page.locator('.weather-viewport');
   await expect(viewport).toHaveAttribute('data-column', '3');
   await expect(page.getByRole('article', { name: 'Текущая погода' })).toBeVisible();
-  await expect(viewport).toHaveAttribute('data-grid-rows', '5');
+  await expect(viewport).toHaveAttribute('data-grid-rows', '3');
   const currentColors = await cardColors(page.locator('[data-tikitaki-role="current"] article'));
   expect(requests).toHaveLength(0);
   for (const [layer, title] of [
@@ -142,14 +142,14 @@ test('opens temperature wind and pressure to the left and returns vertically to 
   }
   await viewport.focus();
   await viewport.press('ArrowDown');
-  await expect(viewport).toHaveAttribute('data-row', '3');
+  await expect(viewport).toHaveAttribute('data-row', '1');
   await expect(viewport).toHaveAttribute('data-column', '3');
   await expect(page.getByRole('article', { name: 'Прогноз на день' })).toContainText('Завтра');
   await expect(page.locator('iframe')).toHaveCount(0);
   const dailyColors = await cardColors(page.locator('[data-tikitaki-role="current"] article'));
   expect(dailyColors).not.toEqual(currentColors);
   await viewport.press('ArrowLeft');
-  await expect(viewport).toHaveAttribute('data-row', '3');
+  await expect(viewport).toHaveAttribute('data-row', '1');
   await expect(viewport).toHaveAttribute('data-column', '2');
   const tomorrowMap = page.locator('[data-tikitaki-role="current"] .weather-map');
   expect(await cardColors(tomorrowMap)).toEqual(dailyColors);
@@ -207,7 +207,7 @@ test('omits maps beyond the supported calendar and keeps hourly cells beside dai
   );
   await page.goto('./');
   const viewport = page.locator('.weather-viewport');
-  await expect(viewport).toHaveAttribute('data-grid-rows', '10');
+  await expect(viewport).toHaveAttribute('data-grid-rows', '8');
   await viewport.focus();
   await viewport.press('ArrowDown');
   await expect(viewport).toHaveAttribute('data-active-cell', '2026-10-27/daily');
@@ -222,7 +222,7 @@ test('omits maps beyond the supported calendar and keeps hourly cells beside dai
   await expect(viewport).toHaveAttribute('data-column', '3');
   for (let row = 3; row <= 5; row++) {
     await viewport.press('ArrowDown');
-    await expect(viewport).toHaveAttribute('data-row', String(row + 2));
+    await expect(viewport).toHaveAttribute('data-row', String(row));
   }
   await viewport.press('ArrowLeft');
   await expect(viewport).toHaveAttribute('data-active-cell', '2026-10-31/map/temp');

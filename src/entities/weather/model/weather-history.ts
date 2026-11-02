@@ -1,8 +1,18 @@
 import { messages } from '@/shared/locales';
+import type { ForecastDay } from './forecast';
 import type { WeatherGrid } from './types';
 
-/** The current weather row below the two historical rows. */
-export const weatherPrimaryRow = 2;
+/**
+ * weatherPrimaryRow. Locate the current weather inside the available rows.
+ * @param grid The current navigation grid.
+ * @returns The main row index with zero as the empty grid fallback.
+ */
+export function weatherPrimaryRow(grid: WeatherGrid): number {
+  return Math.max(
+    0,
+    grid.findIndex((row) => row.some((cell) => cell.kind === 'current')),
+  );
+}
 export type HistoryPeriod = 'yesterday' | 'yearAgo';
 
 /**
@@ -29,25 +39,30 @@ export function weatherHistoryDates(today: string): Readonly<Record<HistoryPerio
 }
 
 /**
- * addWeatherHistory. Add two single card rows above the current weather without changing its identity.
+ * addWeatherHistory. Add only successful historical rows above the current weather without changing its identity.
  * @param grid The current and future weather rows with any map cards.
- * @returns The decorated grid with history aligned to the main weather column.
+ * @param days The successful historical summaries for this session.
+ * @returns The grid with only available history aligned to the main column.
  */
-export function addWeatherHistory(grid: WeatherGrid): WeatherGrid {
+export function addWeatherHistory(grid: WeatherGrid, days: readonly ForecastDay[]): WeatherGrid {
   const today = grid.flat().find((cell) => cell.kind === 'current')?.date;
   if (!today) return grid;
   const dates = weatherHistoryDates(today);
-  return Object.freeze([
-    ...(['yearAgo', 'yesterday'] as const).map((period) =>
+  const rows: WeatherGrid[number][] = [];
+  for (const period of ['yearAgo', 'yesterday'] as const) {
+    const weather = days.find((day) => day.date === dates[period]);
+    if (!weather) continue;
+    rows.push(
       Object.freeze([
         Object.freeze({
           kind: 'history' as const,
           period,
           date: dates[period],
           id: `${dates[period]}/history/${period}`,
+          weather,
         }),
       ]),
-    ),
-    ...grid,
-  ]);
+    );
+  }
+  return Object.freeze([...rows, ...grid]);
 }
