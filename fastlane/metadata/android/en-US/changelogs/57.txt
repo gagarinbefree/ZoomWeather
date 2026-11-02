@@ -1,0 +1,1 @@
+Added an Android build without Google Play Services, automatic diagnostic uploads or GitHub APK updates. Includes native device location and shared weather cards.

@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { buildProfile } from './src/app/config/build-profile.ts';
 import { fileURLToPath, URL } from 'node:url';
 import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -15,7 +16,8 @@ function createViteConfig(environment: ConfigEnv): UserConfig {
     app: fileURLToPath(new URL('./index.html', import.meta.url)),
   };
   const isBrowserTest = environment.mode === 'e2e';
-  const isAndroid = environment.mode === 'android';
+  const profile = buildProfile(environment.mode);
+  const isAndroid = profile.native;
   if (isBrowserTest) {
     input['diagnostics-fixture'] = fileURLToPath(
       new URL('./src/tests/shared/diagnostics/fixtures/index.html', import.meta.url),
@@ -31,7 +33,7 @@ function createViteConfig(environment: ConfigEnv): UserConfig {
     base: isAndroid ? './' : '/ZoomWeather/',
     define: {
       'import.meta.env.VITE_HAWK_DSN': JSON.stringify(
-        isBrowserTest
+        isBrowserTest || profile.fdroid
           ? ''
           : (process.env['HAWK_DSN'] ??
               loadEnv(environment.mode, process.cwd(), 'HAWK_')['HAWK_DSN'] ??
@@ -47,7 +49,7 @@ function createViteConfig(environment: ConfigEnv): UserConfig {
         transformIndexHtml: {
           order: 'pre',
           handler(html): string {
-            return isAndroid ? html.replace('/src/app/main.ts', '/src/app/main.android.ts') : html;
+            return isAndroid ? html.replace('/src/app/main.ts', profile.entry) : html;
           },
         },
       },
@@ -83,12 +85,19 @@ function createViteConfig(environment: ConfigEnv): UserConfig {
     ],
     resolve: {
       alias: {
+        ...(profile.fdroid
+          ? {
+              '@/shared/diagnostics': fileURLToPath(
+                new URL('./src/app/platforms/android/fdroid-diagnostics.ts', import.meta.url),
+              ),
+            }
+          : {}),
         '@': fileURLToPath(new URL('./src', import.meta.url)),
         '@assets': fileURLToPath(new URL('./shared/assets', import.meta.url)),
       },
     },
     build: {
-      outDir: isAndroid ? 'dist-android' : isBrowserTest ? 'dist-e2e' : 'dist',
+      outDir: profile.output,
       rolldownOptions: { input },
     },
   };

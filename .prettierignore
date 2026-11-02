@@ -11,3 +11,5 @@ package-lock.json
 .agents/
 skills-lock.json
 docs/first_promt.txt
+
+dist-fdroid/

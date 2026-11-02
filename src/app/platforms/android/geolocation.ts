@@ -1,6 +1,6 @@
 import type { DeviceGeolocation } from '@/entities/location';
 
-interface NativeGeolocation {
+export interface NativeGeolocation {
   readonly getCurrentPosition: (options: PositionOptions) => Promise<{
     readonly coords: { readonly latitude: number; readonly longitude: number };
   }>;

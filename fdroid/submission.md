@@ -1,0 +1,31 @@
+# ZoomWeather submission draft
+
+This request is not submitted. Do not submit it until the application license is selected, the matching release tag exists, and the candidate has passed the native build and dependency audit.
+
+## Application
+
+- Name: ZoomWeather
+- Package: com.gagarinbefree.tikweather
+- Source: https://github.com/gagarinbefree/ZoomWeather
+- Website: https://gagarinbefree.github.io/ZoomWeather/
+- Build recipe: fdroid/com.gagarinbefree.tikweather.yml
+- Store metadata: fastlane/metadata/android
+- Application license: awaiting the upstream author's choice
+
+## Description for reviewers
+
+ZoomWeather shows current, hourly, daily and available historical weather in swipe cards. The Android application bundles its web UI and uses native GPS, rather than opening the public website. It retains the last successful forecast on the device for offline use. Historical summaries remain in memory only.
+
+The F-Droid profile uses Android LocationManager without Google Play Services. It excludes remote error reporting and the GitHub APK update prompt. F-Droid manages its updates and signs its own build. No weather API keys or CI secrets are required to build the app. The Android package ID is retained from the original TikWeather name to preserve application identity.
+
+Weather queries use the author's public WeatherServer instance. Its source is https://github.com/gagarinbefree/WeatherServer. The app also uses GeoJS and BigDataCloud for location names or IP fallback, and optionally displays Windy iframe maps. Please review the NonFreeNet and TetheredNet labels. These services receive the IP address and the coordinates needed for their requests.
+
+The project is young. It is already used and tested on a physical Android device and an emulator. The first-release age and evidence of actual use should be reviewed under the inclusion policy rather than asserting that acceptance is automatic.
+
+## Build tool review
+
+The draft recipe uses an official checksum pinned Node binary and narrowly lists the FLOSS native npm build tools. These paths and licenses require F-Droid scanner review; they do not hide the entire node_modules directory. The proprietary location package is removed before scanning. The web compilation belongs to the actual build phase. The first build's tag must be resolved to its full commit hash before submission.
+
+## Submission destination
+
+Open a merge request against https://gitlab.com/fdroid/fdroiddata with the recipe in metadata/com.gagarinbefree.tikweather.yml. Alternatively open a request for packaging at https://gitlab.com/fdroid/rfp. A GitLab account is needed. Publication follows the maintainers' review; a GitHub build does not publish the app to F-Droid.

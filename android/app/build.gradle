@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+def isFdroid = project.findProperty('fdroid') == 'true'
+
 def generatedSharedIcon = file("$buildDir/generated/shared-icon")
 def appVersionCode = (project.findProperty('appVersionCode') ?: '1').toString().toInteger()
 def appVersionName = (project.findProperty('appVersionName') ?: '0.1.0').toString()
@@ -14,6 +16,7 @@ def generateSharedIcon = tasks.register('generateSharedIcon', Copy) {
 android {
     namespace = "com.gagarinbefree.zoomweather"
     compileSdk = rootProject.ext.compileSdkVersion
+    buildFeatures { buildConfig true }
     defaultConfig {
         // Keep the installed package identity so existing Android apps can update.
         applicationId "com.gagarinbefree.tikweather"
@@ -21,6 +24,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode
         versionName appVersionName
+        buildConfigField "boolean", "FDROID", isFdroid.toString()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -45,6 +49,12 @@ android {
         }
     }
     buildTypes {
+        debug {
+            if (isFdroid) {
+                applicationIdSuffix '.fdroid'
+                versionNameSuffix '-fdroid-debug'
+            }
+        }
         release {
             if (signingStorePath && signingStorePassword) {
                 signingConfig signingConfigs.release
@@ -55,6 +65,7 @@ android {
     }
     sourceSets {
         main.res.srcDir generatedSharedIcon
+        test.java.srcDir "../../src/tests/app/platforms/android/native"
     }
 }
 
@@ -82,11 +93,15 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
-try {
-    def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
-        apply plugin: 'com.google.gms.google-services'
+
+if (isFdroid) {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group.startsWith('com.google.android.gms') ||
+                    details.requested.group.startsWith('com.google.firebase') ||
+                    details.requested.group == 'io.ionic.libs') {
+                throw new GradleException('F Droid must not include Google Play Services or the proprietary geolocation backend')
+            }
+        }
     }
-} catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }

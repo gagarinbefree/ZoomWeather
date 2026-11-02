@@ -168,3 +168,43 @@ jobs:
           else
             gh release create "$tag" ZoomWeather-Android.apk "TikWeather-Android.apk#Compatibility update for older installations" --target "$GITHUB_SHA" --title "ZoomWeather $RELEASE_VERSION" --generate-notes --latest
           fi
+
+  fdroid:
+    name: F-Droid build
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - run: npm ci
+      - run: npm run test:fdroid
+      - run: npm run android:sync:fdroid
+        env:
+          VITE_APP_VERSION: 0.1.${{ github.run_number }}
+      - name: Build without proprietary location dependencies
+        run: |
+          chmod +x android/gradlew
+          ./android/gradlew -p android :app:testDebugUnitTest :app:assembleRelease --no-daemon -Pfdroid=true -PappVersionCode=${{ github.run_number }} -PappVersionName=0.1.${{ github.run_number }}
+          ./android/gradlew -p android :app:dependencies --configuration releaseRuntimeClasspath -Pfdroid=true --console=plain > fdroid-dependencies.txt
+          if grep -E 'com.google.android.gms:|com.google.firebase:|io.ionic.libs:' fdroid-dependencies.txt; then exit 1; fi
+      - name: Upload unsigned F-Droid candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZoomWeather-FDroid-unsigned
+          path: |
+            android/app/build/outputs/apk/release/app-release-unsigned.apk
+            android/app/build/test-results/testDebugUnitTest/
+            fdroid-dependencies.txt

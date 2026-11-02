@@ -4,4 +4,6 @@
     <string name="title_activity_main">ZoomWeather</string>
     <string name="package_name">com.gagarinbefree.zoomweather</string>
     <string name="custom_url_scheme">com.gagarinbefree.zoomweather</string>
+    <string name="native_location_denied">Location permission was denied</string>
+    <string name="native_location_unavailable">Device location is unavailable</string>
 </resources>

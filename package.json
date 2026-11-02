@@ -25,7 +25,12 @@
     "test:e2e:connected": "node src/tests/run-connected-chrome.ts",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run test:e2e",
     "postbuild": "node tools/audit-weather-bundle.mjs dist",
-    "postbuild:android": "node tools/audit-weather-bundle.mjs dist-android"
+    "postbuild:android": "node tools/audit-weather-bundle.mjs dist-android",
+    "build:fdroid": "npm run typecheck && vite build --mode fdroid",
+    "postbuild:fdroid": "node tools/copy-third-party-notices.mjs dist-fdroid && node tools/audit-weather-bundle.mjs dist-fdroid && node tools/audit-fdroid.mjs",
+    "android:sync:fdroid": "npm run build:fdroid && node tools/sync-fdroid.mjs",
+    "metadata:sync": "node tools/sync-store-metadata.mjs",
+    "test:fdroid": "node --test src/tests/tools/fdroid-audit.test.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",

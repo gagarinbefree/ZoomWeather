@@ -13,6 +13,7 @@ export default tseslint.config(
       'dist/**',
       'dist-e2e/**',
       'dist-android/**',
+      'dist-fdroid/**',
       'android/**',
       'coverage/**',
       'playwright-report/**',

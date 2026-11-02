@@ -1,0 +1,64 @@
+Disabled: Upstream application license selection is pending
+Categories:
+  - Science & Education
+License: Unknown
+AuthorName: gagarinbefree
+WebSite: https://gagarinbefree.github.io/ZoomWeather/
+SourceCode: https://github.com/gagarinbefree/ZoomWeather
+IssueTracker: https://github.com/gagarinbefree/ZoomWeather/issues
+Changelog: https://github.com/gagarinbefree/ZoomWeather/releases
+AntiFeatures:
+  NonFreeNet:
+    en-US: Optional Windy maps and weather providers are third party services.
+  TetheredNet:
+    en-US: Weather requests use the developer's WeatherServer instance by default.
+RepoType: git
+Repo: https://github.com/gagarinbefree/ZoomWeather.git
+Builds:
+  - versionName: 0.1.57
+    versionCode: 57
+    commit: v0.1.57
+    subdir: android/app
+    sudo:
+      - apt-get update
+      - apt-get install -y openjdk-21-jdk-headless curl xz-utils
+    init:
+      - cd ../..
+      - curl -Lo node.tar.xz https://nodejs.org/dist/v24.15.0/node-v24.15.0-linux-x64.tar.xz
+      - echo '472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6  node.tar.xz' | sha256sum -c -
+      - tar xf node.tar.xz
+      - rm node.tar.xz
+    prebuild:
+      - cd ../..
+      - export PATH="$PWD/node-v24.15.0-linux-x64/bin:$PATH"
+      - npm ci
+      - echo 'appVersionCode=$$VERCODE$$' >> android/gradle.properties
+      - echo 'appVersionName=$$VERSION$$' >> android/gradle.properties
+      - ZOOMWEATHER_DISTRIBUTION=fdroid node node_modules/@capacitor/cli/bin/capacitor update android
+      - rm -rf node_modules/@capacitor/geolocation node_modules/@capacitor/synapse
+    rm:
+      - src/app/main.android.ts
+    scanignore:
+      - node-v24.15.0-linux-x64/bin/node
+      - node_modules/@rolldown/binding-linux-x64-gnu
+      - node_modules/@rollup/rollup-linux-x64-gnu
+      - node_modules/@parcel/watcher-linux-x64-glibc
+      - node_modules/lightningcss-linux-x64-gnu
+      - node_modules/@one-ini/wasm/one_ini_bg.wasm
+      - node_modules/source-map/lib/mappings.wasm
+    scandelete:
+      - node_modules/playwright-core/lib/webp_codec.wasm
+    build:
+      - cd ../..
+      - export PATH="$PWD/node-v24.15.0-linux-x64/bin:$PATH"
+      - export VITE_APP_VERSION=$$VERSION$$
+      - npm run android:sync:fdroid
+    gradle:
+      - yes
+    gradleprops:
+      - fdroid=true
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v0\.1\.[0-9]+$
+UpdateCheckData: '|^v0\.1\.([0-9]+)$||^v(0\.1\.[0-9]+)$'
+CurrentVersion: 0.1.57
+CurrentVersionCode: 57

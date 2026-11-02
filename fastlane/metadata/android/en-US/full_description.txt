@@ -1,0 +1,11 @@
+<p>Weather without the clutter. Open ZoomWeather to see current weather, the coming hours and the days ahead.</p>
+<ul>
+<li>Swipe left for hourly forecasts and vertically to move between days.</li>
+<li>See yesterday and the same date a year ago when historical data is available.</li>
+<li>Pull down on the topmost card to refresh and return to current weather.</li>
+<li>Explore optional temperature, wind and pressure maps from Windy.</li>
+<li>Keep the last successful forecast on your device for offline viewing. History is not saved.</li>
+<li>Use English or Russian with localized wind units and soft weather colors.</li>
+</ul>
+<p>The F-Droid edition uses Android location without Google Play Services. It does not send automatic diagnostic reports or download updates from GitHub. Updates are managed by F-Droid.</p>
+<p>Location permission is optional. If it is unavailable, ZoomWeather tries IP location. Weather, location names and maps require external internet services, which receive the coordinates or IP address needed to answer requests.</p>

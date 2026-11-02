@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="native_location_denied">Нет разрешения на определение местоположения</string>
+    <string name="native_location_unavailable">Местоположение устройства недоступно</string>
+</resources>
