@@ -17,7 +17,7 @@ Repo: https://github.com/gagarinbefree/ZoomWeather.git
 Builds:
   - versionName: 0.1.58
     versionCode: 58
-    commit: v0.1.58
+    commit: 68818762b8d6f6359742e862ea62a7caf2e15be0
     subdir: android/app
     sudo:
       - apt-get update

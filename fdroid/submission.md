@@ -1,6 +1,6 @@
-# ZoomWeather submission draft
+# ZoomWeather F-Droid submission
 
-This request is not submitted. The application is licensed under MIT. Before submission, verify the matching release commit and complete the F-Droid source and binary scanner review.
+Request for packaging submitted on November 2, 2026: [ZoomWeather #4728](https://gitlab.com/fdroid/rfp/-/work_items/4728). The request is open and awaits maintainer review. The application is licensed under MIT and is not yet published on F-Droid. Full fdroidserver source and binary scanner checks remain pending.
 
 ## Application
 
@@ -24,8 +24,8 @@ The project is young. It is already used and tested on a physical Android device
 
 ## Build tool review
 
-The draft recipe uses an official checksum pinned Node binary and narrowly lists the FLOSS native npm build tools. These paths and licenses require F-Droid scanner review; they do not hide the entire node_modules directory. The proprietary location package is removed before scanning. The web compilation belongs to the actual build phase. The first build's tag must be resolved to its full commit hash before submission.
+The draft recipe uses an official checksum pinned Node binary and narrowly lists the FLOSS native npm build tools. These paths and licenses require F-Droid scanner review; they do not hide the entire node_modules directory. The proprietary location package is removed before scanning. The web compilation belongs to the actual build phase. The first MIT licensed release is v0.1.58, pinned to commit `68818762b8d6f6359742e862ea62a7caf2e15be0`. All GitHub Actions jobs passed for that release, including the separate unsigned F-Droid build. This is not a substitute for fdroidserver scanner checks.
 
 ## Submission destination
 
-Open a merge request against https://gitlab.com/fdroid/fdroiddata with the recipe in metadata/com.gagarinbefree.tikweather.yml. Alternatively open a request for packaging at https://gitlab.com/fdroid/rfp. A GitLab account is needed. Publication follows the maintainers' review; a GitHub build does not publish the app to F-Droid.
+Follow maintainer feedback in request #4728. Once the packaging checks are complete, open a merge request against https://gitlab.com/fdroid/fdroiddata with the recipe in metadata/com.gagarinbefree.tikweather.yml and reference the existing request. Do not create a duplicate packaging request. Publication follows the maintainers' review; a GitHub build does not publish the app to F-Droid.
