@@ -9,40 +9,37 @@ test('shows Open Meteo current weather as the primary source', async ({ page }) 
     Object.defineProperty(navigator, 'language', { configurable: true, value: 'ru' });
   });
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
     async (route) => {
       await route.fulfill({ status: 503, json: {} });
     },
   );
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/forecast.json?**',
     async (route) => {
       await route.fulfill({ json: forecastResponse });
     },
   );
-  await page.route(
-    'https://gagarinbefree.clodocd.com/api/open-meteo/v1/forecast?**',
-    async (route) => {
-      await route.fulfill({
-        json: {
-          timezone: 'Asia/Yekaterinburg',
-          current: {
-            time: Date.UTC(2026, 9, 26, 7) / 1000,
-            temperature_2m: 9,
-            apparent_temperature: 7,
-            relative_humidity_2m: 70,
-            wind_speed_10m: 12,
-            wind_direction_10m: 225,
-            pressure_msl: 1012,
-            visibility: 10000,
-            uv_index: 1,
-            weather_code: 3,
-            is_day: 1,
-          },
+  await page.route('https://157.22.180.167:8443/api/open-meteo/v1/forecast?**', async (route) => {
+    await route.fulfill({
+      json: {
+        timezone: 'Asia/Yekaterinburg',
+        current: {
+          time: Date.UTC(2026, 9, 26, 7) / 1000,
+          temperature_2m: 9,
+          apparent_temperature: 7,
+          relative_humidity_2m: 70,
+          wind_speed_10m: 12,
+          wind_direction_10m: 225,
+          pressure_msl: 1012,
+          visibility: 10000,
+          uv_index: 1,
+          weather_code: 3,
+          is_day: 1,
         },
-      });
-    },
-  );
+      },
+    });
+  });
   await page.goto('./');
   const current = page.getByRole('article', { name: 'Текущая погода' });
   await expect(current).toBeVisible();
@@ -53,22 +50,22 @@ test('shows Open Meteo current weather as the primary source', async ({ page }) 
 
 test('shows OpenWeatherMap current weather after both earlier providers fail', async ({ page }) => {
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
     async (route) => {
       await route.fulfill({ status: 503, json: {} });
     },
   );
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/forecast.json?**',
     async (route) => {
       await route.fulfill({ json: forecastResponse });
     },
   );
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/open-meteo/**', async (route) => {
     await route.fulfill({ status: 503, json: {} });
   });
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/openweathermap/data/2.5/weather?**',
+    'https://157.22.180.167:8443/api/openweathermap/data/2.5/weather?**',
     async (route) => {
       await route.fulfill({
         json: {
@@ -98,22 +95,22 @@ test('uses the available three hour OpenWeatherMap forecast after both forecast 
   await page.clock.setFixedTime(new Date('2026-10-26T15:30:00Z'));
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
     async (route) => {
       await route.fulfill({ json: currentResponse });
     },
   );
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/forecast.json?**',
     async (route) => {
       await route.fulfill({ status: 503, json: {} });
     },
   );
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/open-meteo/**', async (route) => {
     await route.fulfill({ status: 503, json: {} });
   });
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/openweathermap/data/2.5/weather?**',
+    'https://157.22.180.167:8443/api/openweathermap/data/2.5/weather?**',
     async (route) => {
       await route.fulfill({
         json: {
@@ -133,7 +130,7 @@ test('uses the available three hour OpenWeatherMap forecast after both forecast 
   );
   let forecastRequests = 0;
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/openweathermap/data/2.5/forecast?**',
+    'https://157.22.180.167:8443/api/openweathermap/data/2.5/forecast?**',
     async (route) => {
       forecastRequests++;
       await route.fulfill({

@@ -42,7 +42,7 @@ describe('historical daily weather adapter', () => {
     const input = fetcher.mock.calls[0]?.[0];
     if (typeof input !== 'string') throw new Error('Expected a URL');
     const url = new URL(input);
-    expect(url.host).toBe('gagarinbefree.clodocd.com');
+    expect(url.host).toBe('157.22.180.167:8443');
     expect(url.pathname).toBe('/api/open-meteo/v1/archive');
     expect(url.searchParams.get('start_date')).toBe(options.date);
     expect(url.searchParams.get('end_date')).toBe(options.date);

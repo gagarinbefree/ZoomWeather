@@ -2,7 +2,7 @@
 
 The website, installed PWA and Android app use the same backend configuration in
 `shared/assets/config/weather-server.json`. The default address is
-`https://gagarinbefree.clodocd.com/`. `VITE_WEATHER_SERVER_URL` can override this public address.
+`https://157.22.180.167:8443/`. `VITE_WEATHER_SERVER_URL` can override this public address.
 Only HTTPS is accepted outside local development. URLs with credentials, queries or fragments are
 rejected. The Vite environment allowlist excludes obsolete provider keys even if an old local
 `.env` file still contains them.

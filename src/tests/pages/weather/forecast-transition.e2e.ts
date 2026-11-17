@@ -39,13 +39,13 @@ test('keeps detailed hours and unique days when the longer fallback arrives duri
   await page.clock.setFixedTime(new Date('2026-10-26T05:37:00Z'));
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
     async (route) => {
       await route.fulfill({ json: currentResponse });
     },
   );
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/forecast.json?**',
     async (route) => {
       const depth = Number(new URL(route.request().url()).searchParams.get('days'));
       await route.fulfill({
@@ -53,11 +53,11 @@ test('keeps detailed hours and unique days when the longer fallback arrives duri
       });
     },
   );
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/open-meteo/**', async (route) => {
     await route.fulfill({ status: 503, json: {} });
   });
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/openweathermap/data/2.5/weather?**',
+    'https://157.22.180.167:8443/api/openweathermap/data/2.5/weather?**',
     async (route) => {
       await route.fulfill({
         json: {
@@ -79,7 +79,7 @@ test('keeps detailed hours and unique days when the longer fallback arrives duri
   );
   let fallbackRequests = 0;
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/openweathermap/data/2.5/forecast?**',
+    'https://157.22.180.167:8443/api/openweathermap/data/2.5/forecast?**',
     async (route) => {
       fallbackRequests++;
       await route.fulfill({

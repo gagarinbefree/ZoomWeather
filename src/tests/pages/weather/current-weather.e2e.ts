@@ -4,10 +4,10 @@ import { currentResponse } from '@/tests/entities/weather/api/current-fixture';
 
 test.use({ permissions: ['geolocation'], geolocation: { latitude: 58.0047, longitude: 56.2514 } });
 test.beforeEach(async ({ page }) => {
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/open-meteo/**', async (route) => {
     await route.abort('failed');
   });
-  await page.route('https://gagarinbefree.clodocd.com/api/openweathermap/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/openweathermap/**', async (route) => {
     await route.fulfill({ status: 503, json: {} });
   });
 });
@@ -21,7 +21,7 @@ test('shows device weather directly with local icons and translated measurements
     ipRequests++;
     await route.fulfill({ json: {} });
   });
-  await page.route('https://gagarinbefree.clodocd.com/api/weatherapi/v1/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/weatherapi/v1/**', async (route) => {
     apiCalls.push(route.request().url());
     await route.fulfill({ json: currentResponse });
   });
@@ -76,7 +76,7 @@ test('falls back to GeoJS after permission denial and retries below the error te
   });
   let attempts = 0;
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
     async (route) => {
       attempts++;
       if (attempts === 1) await route.abort('failed');
@@ -114,7 +114,7 @@ test('keeps a short portrait screen readable with long place names', async ({ pa
     });
   });
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
     async (route) => {
       await route.fulfill({
         json: {

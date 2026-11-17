@@ -38,18 +38,17 @@ test.use({
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-10-26T05:37:00Z'));
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.route('https://gagarinbefree.clodocd.com/api/openweathermap/**', (route) =>
+  await page.route('https://157.22.180.167:8443/api/openweathermap/**', (route) =>
     route.fulfill({ status: 503, json: {} }),
   );
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/**', (route) =>
+  await page.route('https://157.22.180.167:8443/api/open-meteo/**', (route) =>
     route.fulfill({ status: 503, json: {} }),
   );
-  await page.route('https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**', (route) =>
+  await page.route('https://157.22.180.167:8443/api/weatherapi/v1/current.json?**', (route) =>
     route.fulfill({ json: currentResponse }),
   );
-  await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
-    (route) => route.fulfill({ json: mapForecastResponse }),
+  await page.route('https://157.22.180.167:8443/api/weatherapi/v1/forecast.json?**', (route) =>
+    route.fulfill({ json: mapForecastResponse }),
   );
 });
 
@@ -198,9 +197,8 @@ test('omits maps beyond the supported calendar and keeps hourly cells beside dai
     date: new Date(Date.UTC(2026, 9, 26 + index)).toISOString().slice(0, 10),
     hour: first.hour.map((hour) => ({ ...hour, time_epoch: hour.time_epoch + index * 86400 })),
   }));
-  await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
-    (route) => route.fulfill({ json: { forecast: { forecastday: days } } }),
+  await page.route('https://157.22.180.167:8443/api/weatherapi/v1/forecast.json?**', (route) =>
+    route.fulfill({ json: { forecast: { forecastday: days } } }),
   );
   await page.route('https://embed.windy.com/**', (route) =>
     route.fulfill({ contentType: 'text/html', body: '<html><body>Map</body></html>' }),

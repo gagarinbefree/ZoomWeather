@@ -15,7 +15,7 @@ for (const firstReserveFails of [false, true]) {
       locationRequests.push('BigDataCloud');
       await route.abort();
     });
-    await page.route('https://gagarinbefree.clodocd.com/api/location/**', async (route) => {
+    await page.route('https://157.22.180.167:8443/api/location/**', async (route) => {
       const url = new URL(route.request().url());
       expect(url.searchParams.get('latitude')).toBe('58.0047');
       expect(url.searchParams.get('longitude')).toBe('56.2514');
@@ -36,16 +36,13 @@ for (const firstReserveFails of [false, true]) {
             },
       );
     });
-    await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/**', async (route) => {
+    await page.route('https://157.22.180.167:8443/api/open-meteo/**', async (route) => {
       await route.fulfill({ status: 503, json: {} });
     });
-    await page.route(
-      'https://gagarinbefree.clodocd.com/api/openweathermap/data/**',
-      async (route) => {
-        await route.fulfill({ status: 503, json: {} });
-      },
-    );
-    await page.route('https://gagarinbefree.clodocd.com/api/weatherapi/v1/**', async (route) => {
+    await page.route('https://157.22.180.167:8443/api/openweathermap/data/**', async (route) => {
+      await route.fulfill({ status: 503, json: {} });
+    });
+    await page.route('https://157.22.180.167:8443/api/weatherapi/v1/**', async (route) => {
       weatherRequests.push(route.request().url());
       await route.fulfill({
         json: route.request().url().includes('current.json') ? currentResponse : forecastResponse,

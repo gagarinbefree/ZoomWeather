@@ -18,10 +18,7 @@ async function holdCurrentRequest(page: Page): Promise<void> {
     });
     Object.defineProperty(navigator, 'language', { configurable: true, value: 'ru' });
   });
-  await page.route(
-    'https://gagarinbefree.clodocd.com/api/open-meteo/v1/forecast?**',
-    () => undefined,
-  );
+  await page.route('https://157.22.180.167:8443/api/open-meteo/v1/forecast?**', () => undefined);
 }
 
 /**

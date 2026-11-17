@@ -21,13 +21,13 @@ test('exposes an installable manifest scoped to GitHub Pages', async ({ page }) 
 });
 
 test('opens the application shell after the network goes offline', async ({ page, context }) => {
-  await page.route('https://gagarinbefree.clodocd.com/api/weatherapi/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/weatherapi/**', async (route) => {
     await route.fulfill({ status: 503, json: {} });
   });
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/open-meteo/**', async (route) => {
     await route.fulfill({ status: 503, json: {} });
   });
-  await page.route('https://gagarinbefree.clodocd.com/api/openweathermap/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/openweathermap/**', async (route) => {
     await route.fulfill({ status: 503, json: {} });
   });
   await page.route('https://get.geojs.io/**', async (route) => {

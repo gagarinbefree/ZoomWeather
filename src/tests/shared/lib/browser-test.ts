@@ -15,12 +15,9 @@ export const test = base.extend({
         },
       });
     });
-    await page.route(
-      'https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**',
-      async (route) => {
-        await route.fulfill({ status: 503, json: {} });
-      },
-    );
+    await page.route('https://157.22.180.167:8443/api/open-meteo/v1/archive?**', async (route) => {
+      await route.fulfill({ status: 503, json: {} });
+    });
     await use(page);
   },
 });

@@ -7,7 +7,7 @@ for (const installed of [false, true]) {
   }) => {
     const site = await startVersionedSite();
     try {
-      await page.route('https://gagarinbefree.clodocd.com/**', (route) =>
+      await page.route('https://157.22.180.167:8443/**', (route) =>
         route.fulfill({ status: 503, json: {} }),
       );
       await page.route('https://get.geojs.io/**', (route) =>

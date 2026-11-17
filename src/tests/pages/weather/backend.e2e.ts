@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@/tests/shared/lib/browser-test';
 import { currentResponse } from '@/tests/entities/weather/api/current-fixture';
 import { forecastResponse } from '@/tests/entities/weather/api/forecast-fixture';
 
-const origin = 'https://gagarinbefree.clodocd.com';
+const origin = 'https://157.22.180.167:8443';
 const fetchedAt = '2026-10-26T04:00:00Z';
 const cacheHeaders = {
   'Access-Control-Allow-Origin': '*',

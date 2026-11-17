@@ -9,13 +9,13 @@ test('shows saved weather while resolving city and country before requesting fre
 }) => {
   await page.clock.setFixedTime(new Date('2026-10-26T05:37:00Z'));
   let currentRequests = 0;
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/open-meteo/**', async (route) => {
     await route.fulfill({ status: 503, json: {} });
   });
-  await page.route('https://gagarinbefree.clodocd.com/api/openweathermap/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/openweathermap/**', async (route) => {
     await route.fulfill({ status: 503, json: {} });
   });
-  await page.route('https://gagarinbefree.clodocd.com/api/weatherapi/v1/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/api/weatherapi/v1/**', async (route) => {
     const current = route.request().url().includes('current.json');
     if (current) currentRequests++;
     await route.fulfill({ json: current ? currentResponse : forecastResponse });
@@ -55,7 +55,7 @@ test('shows a location error instead of weather when the city cannot be identifi
   page,
 }) => {
   let weatherRequests = 0;
-  await page.route('https://gagarinbefree.clodocd.com/**', async (route) => {
+  await page.route('https://157.22.180.167:8443/**', async (route) => {
     if (new URL(route.request().url()).pathname.startsWith('/api/location/')) {
       await route.fulfill({ status: 503, json: {} });
       return;

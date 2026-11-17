@@ -150,7 +150,7 @@ describe('OpenWeatherMap adapter', () => {
     const requested = fetcher.mock.calls[0]?.[0];
     if (typeof requested !== 'string') throw new Error('Expected a backend URL');
     const url = new URL(requested);
-    expect(url.origin).toBe('https://gagarinbefree.clodocd.com');
+    expect(url.origin).toBe('https://157.22.180.167:8443');
     expect(url.searchParams.has('appid')).toBe(false);
   });
 });

@@ -57,7 +57,7 @@ describe('Hawk diagnostics', () => {
   it('records safe request summaries instead of URLs query values or response payloads', () => {
     initializeDiagnostics(createApp(diagnosticRoot), 'PWA', 'https://public@hawk.test/0');
     recordApiRequest(
-      'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?key=private&q=58.0047,56.2514',
+      'https://157.22.180.167:8443/api/weatherapi/v1/current.json?key=private&q=58.0047,56.2514',
       123,
       503,
       'unavailable',

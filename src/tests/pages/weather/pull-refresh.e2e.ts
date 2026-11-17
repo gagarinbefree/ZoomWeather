@@ -12,17 +12,16 @@ test.use({
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-10-26T05:37:00Z'));
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/**', (route) =>
+  await page.route('https://157.22.180.167:8443/api/open-meteo/**', (route) =>
     route.fulfill({ status: 503, json: {} }),
   );
-  await page.route('https://gagarinbefree.clodocd.com/api/openweathermap/**', (route) =>
+  await page.route('https://157.22.180.167:8443/api/openweathermap/**', (route) =>
     route.fulfill({ status: 503, json: {} }),
   );
-  await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/forecast.json?**',
-    (route) => route.fulfill({ json: forecastResponse }),
+  await page.route('https://157.22.180.167:8443/api/weatherapi/v1/forecast.json?**', (route) =>
+    route.fulfill({ json: forecastResponse }),
   );
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**', (route) =>
+  await page.route('https://157.22.180.167:8443/api/open-meteo/v1/archive?**', (route) =>
     route.fulfill({
       json: historyFixture(new URL(route.request().url()).searchParams.get('start_date') ?? ''),
     }),
@@ -97,7 +96,7 @@ for (const installed of [false, true]) {
       finish = resolve;
     });
     await page.route(
-      'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+      'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
       async (route) => {
         const attempt = ++requests;
         if (attempt > 1) await gate;
@@ -109,15 +108,12 @@ for (const installed of [false, true]) {
         });
       },
     );
-    await page.route(
-      'https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**',
-      async (route) => {
-        historyRequests++;
-        await route.fulfill({
-          json: historyFixture(new URL(route.request().url()).searchParams.get('start_date') ?? ''),
-        });
-      },
-    );
+    await page.route('https://157.22.180.167:8443/api/open-meteo/v1/archive?**', async (route) => {
+      historyRequests++;
+      await route.fulfill({
+        json: historyFixture(new URL(route.request().url()).searchParams.get('start_date') ?? ''),
+      });
+    });
     await page.goto('./');
     const viewport = page.locator('.weather-viewport');
     const current = page.getByRole('article', { name: 'Текущая погода' });
@@ -154,7 +150,7 @@ test('returns silently to the last successful current card after failed refresh'
 }) => {
   let requests = 0;
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
     async (route) => {
       requests++;
       await route.fulfill(requests === 1 ? { json: currentResponse } : { status: 503, json: {} });
@@ -175,7 +171,7 @@ test('moves from current weather to history without refreshing and ignores a sho
 }) => {
   let requests = 0;
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
     async (route) => {
       requests++;
       await route.fulfill({ json: currentResponse });
@@ -202,13 +198,13 @@ for (const response of ['failed', 'empty'] as const) {
     page,
   }) => {
     let requests = 0;
-    await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**', (route) =>
+    await page.route('https://157.22.180.167:8443/api/open-meteo/v1/archive?**', (route) =>
       route.fulfill(
         response === 'failed' ? { status: 503, json: {} } : { json: { daily: { time: [] } } },
       ),
     );
     await page.route(
-      'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+      'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
       async (route) => {
         requests++;
         await route.fulfill({
@@ -240,16 +236,13 @@ test('keeps the selected hourly forecast when background history appears', async
   const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route(
-    'https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**',
-    async (route) => {
-      await gate;
-      await route.fulfill({
-        json: historyFixture(new URL(route.request().url()).searchParams.get('start_date') ?? ''),
-      });
-    },
-  );
-  await page.route('https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**', (route) =>
+  await page.route('https://157.22.180.167:8443/api/open-meteo/v1/archive?**', async (route) => {
+    await gate;
+    await route.fulfill({
+      json: historyFixture(new URL(route.request().url()).searchParams.get('start_date') ?? ''),
+    });
+  });
+  await page.route('https://157.22.180.167:8443/api/weatherapi/v1/current.json?**', (route) =>
     route.fulfill({ json: currentResponse }),
   );
   await page.goto('./');
@@ -271,13 +264,13 @@ test('keeps the selected hourly forecast when background history appears', async
 test('drops unavailable history after refresh and returns to current weather', async ({ page }) => {
   let requests = 0;
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
     async (route) => {
       requests++;
       await route.fulfill({ json: currentResponse });
     },
   );
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**', (route) =>
+  await page.route('https://157.22.180.167:8443/api/open-meteo/v1/archive?**', (route) =>
     route.fulfill(
       requests > 1
         ? { status: 503, json: {} }
@@ -305,13 +298,13 @@ test('shows only yesterday and refreshes from it when anniversary history is una
 }) => {
   let requests = 0;
   await page.route(
-    'https://gagarinbefree.clodocd.com/api/weatherapi/v1/current.json?**',
+    'https://157.22.180.167:8443/api/weatherapi/v1/current.json?**',
     async (route) => {
       requests++;
       await route.fulfill({ json: currentResponse });
     },
   );
-  await page.route('https://gagarinbefree.clodocd.com/api/open-meteo/v1/archive?**', (route) => {
+  await page.route('https://157.22.180.167:8443/api/open-meteo/v1/archive?**', (route) => {
     const date = new URL(route.request().url()).searchParams.get('start_date') ?? '';
     return route.fulfill(
       date === '2026-10-25' ? { json: historyFixture(date) } : { status: 503, json: {} },

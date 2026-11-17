@@ -18,7 +18,7 @@ describe('getCurrentWeather', () => {
     const requested = fetcher.mock.calls[0]?.[0];
     if (typeof requested !== 'string') throw new Error('Expected a string API URL');
     const url = new URL(requested);
-    expect(url.origin).toBe('https://gagarinbefree.clodocd.com');
+    expect(url.origin).toBe('https://157.22.180.167:8443');
     expect(url.pathname).toBe('/api/weatherapi/v1/current.json');
     expect(url.searchParams.has('key')).toBe(false);
     expect(url.searchParams.get('q')).toBe('58.0047,56.2514');
